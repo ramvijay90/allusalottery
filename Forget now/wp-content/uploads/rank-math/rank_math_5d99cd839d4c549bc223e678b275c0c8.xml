@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="//allusalottery.com/main-sitemap.xsl"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+	<Document>
+		<name>Locations for AllusaLottery</name>
+		<open>1</open>
+		<Folder>
+			<atom:link href="https://allusalottery.com" />
+			<Placemark>
+				<name><![CDATA[AllusaLottery]]></name>
+				<description><![CDATA[AllusaLottery - lucky number generator, Lottery Lucky Number Generator, Advance Lottery Number, powerball lottery result, mega million result, USA lottery]]></description>
+				<address><![CDATA[]]></address>
+				<phoneNumber><![CDATA[]]></phoneNumber>
+				<atom:link href="https://allusalottery.com"/>
+				<LookAt>
+					<altitude>0</altitude>
+					<range></range>
+					<tilt>0</tilt>
+				</LookAt>
+				<Point>
+				</Point>
+			</Placemark>
+		</Folder>
+	</Document>
+</kml>

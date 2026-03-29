@@ -1,0 +1,37 @@
+# Recommended robots.txt for allusalottery.com
+# --------------------------------------------------
+User-agent: Google-adstxt
+Disallow:
+
+User-agent: *
+# Disallow rules for all crawlers
+
+# Block WordPress core files, admin areas, and login pages
+Disallow: /wp-admin/
+Disallow: /wp-login.php
+Disallow: /wp-register.php
+Disallow: /wp-includes/
+Disallow: /xmlrpc.php
+
+# Block server directories and scripts
+Disallow: /cgi-bin/
+
+# Block all URL parameters to prevent crawling of dynamic/duplicate pages
+# This is the most important rule for your site to fix the 404 errors
+Disallow: /*?
+
+# Block feeds, trackbacks, and comment feeds
+Disallow: /feed/
+Disallow: /comments/feed/
+Disallow: /trackback/
+
+# Allow essential files for site rendering and functionality
+Allow: /wp-admin/admin-ajax.php
+Allow: /wp-content/uploads/
+Allow: /wp-content/themes/
+Allow: /wp-content/plugins/
+
+# --------------------------------------------------
+
+# Add your sitemap location at the end
+Sitemap: https://allusalottery.com/sitemap_index.xml

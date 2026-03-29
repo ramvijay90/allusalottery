@@ -1,0 +1,48 @@
+{
+  "name": "usa-lotto-temp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "scrape:hub": "npx tsx lottery-scraper/hub_crawler.ts",
+    "scrape:state": "npx tsx lottery-scraper/state_crawler.ts",
+    "scrape:history": "npx tsx lottery-scraper/history_crawler.ts",
+    "scrape:history:all": "npx tsx lottery-scraper/history_batch_runner.ts",
+    "scrape:all": "npx tsx lottery-scraper/batch_runner.ts",
+    "scrape:part1": "npx tsx lottery-scraper/batch_runner.ts --shard=1/4",
+    "scrape:part2": "npx tsx lottery-scraper/batch_runner.ts --shard=2/4",
+    "scrape:part3": "npx tsx lottery-scraper/batch_runner.ts --shard=3/4",
+    "scrape:part4": "npx tsx lottery-scraper/batch_runner.ts --shard=4/4",
+    "start:scheduler": "npx tsx lottery-scraper/scheduler.ts"
+  },
+  "dependencies": {
+    "@types/node-cron": "^3.0.11",
+    "autoprefixer": "^10.4.24",
+    "axios": "^1.13.5",
+    "cheerio": "^1.2.0",
+    "classnames": "^2.5.1",
+    "dotenv": "^17.3.1",
+    "lucide-react": "^0.574.0",
+    "mongoose": "^9.2.1",
+    "next": "16.1.6",
+    "next-auth": "^4.24.13",
+    "node-cron": "^4.2.1",
+    "postcss": "^8.5.6",
+    "puppeteer": "^24.37.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "tailwindcss": "^3.4.19"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/puppeteer": "^5.4.7",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "typescript": "^5"
+  }
+}
