@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
       revalidatePath(path);
       return NextResponse.json({ revalidated: true, type: 'path', path, now: Date.now() });
     } else if (tag) {
+      // @ts-ignore - Next.js 16 strict types incorrectly require a 2nd profile parameter
       revalidateTag(tag);
       return NextResponse.json({ revalidated: true, type: 'tag', tag, now: Date.now() });
     }

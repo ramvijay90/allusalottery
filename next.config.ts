@@ -34,6 +34,27 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/advanced-lottery-number-generator-board-lucky-number(/?)',
+        destination: '/lucky-number-generator',
+        permanent: true, // 301 redirect for SEO
+      },
+      {
+        source: '/custom-lottery-luck-number-generator-create-own-lottery(/?)',
+        destination: '/lucky-number-generator',
+        permanent: true,
+      },
+      // You can add limitless regex patterns here to catch old WordPress paths!
+      // Example: migrating /florida/fantasy-5/ to /results/fl/fantasy-5
+      // {
+      //   source: '/:state/:game', // WP Structure
+      //   destination: '/results/:state/:game', // Next.js Structure
+      //   permanent: true,
+      // }
+    ];
+  },
 };
 
 export default nextConfig;
