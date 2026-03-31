@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import connectToDatabase from '../lib/db';
 import Game from '../models/Game';
 import State from '../models/State';
+import Result from '../models/Result';
 
 async function fetchStatePage(url: string) {
     console.log(`Launching browser for ${url}...`);
@@ -110,11 +111,26 @@ async function parseAndSaveGames(html: string, stateSlug: string) {
     await connectToDatabase();
 
     for (const game of gamesToSave) {
-        await Game.findOneAndUpdate(
+        const updatedGame = await Game.findOneAndUpdate(
             { stateSlug: game.stateSlug, slug: game.slug },
             game,
             { upsert: true, new: true }
         );
+
+        // SYNC result to Results History Collection
+        if (updatedGame && game.numbers.length > 0) {
+            await Result.findOneAndUpdate(
+                { gameId: updatedGame._id, date: game.lastDrawDate },
+                {
+                    gameId: updatedGame._id,
+                    date: game.lastDrawDate,
+                    numbers: game.numbers,
+                    jackpot: game.jackpot,
+                    powerBall: game.powerBall
+                },
+                { upsert: true }
+            );
+        }
     }
 }
 
