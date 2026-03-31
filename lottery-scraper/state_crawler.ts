@@ -149,6 +149,18 @@ async function run() {
         await parseAndSaveGames(html, stateSlug);
     }
 
+    try {
+        console.log(`\n🧹 Automatic Cache Clear Triggered for /results/${stateSlug}`);
+        const secret = process.env.REVALIDATE_SECRET || 'master_cache_key_2026';
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        
+        await fetch(`${baseUrl}/api/revalidate?path=/results/${stateSlug}&secret=${secret}`).catch(() => {});
+        await fetch(`${baseUrl}/api/revalidate?path=/&secret=${secret}`).catch(() => {});
+        console.log('✅ Cache refreshed successfully.');
+    } catch (err) {
+        console.error('⚠️ Failed to clear Next.js Cache. Ensure the server is running.', err);
+    }
+
     // Explicitly close connection to exit script
     process.exit(0);
 }

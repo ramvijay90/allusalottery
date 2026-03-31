@@ -60,10 +60,26 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
     if (!data) return { title: 'Game Not Found' };
 
     return {
-        title: `${data.game.name} Results - ${data.state.name} Lottery`,
-        description: `Latest winning numbers for ${data.state.name} ${data.game.name}. Next jackpot: ${data.game.jackpot || 'N/A'}.`,
+        title: `${data.game.name} Winning Numbers & Results - ${data.state.name} Lottery`,
+        description: `Check the latest ${data.state.name} ${data.game.name} winning numbers, past results, jackpots, and historical data. Next estimated jackpot: ${data.game.jackpot || 'Pending'}!`,
+        keywords: [
+            `${data.game.name} results`, `${data.game.name} winning numbers`, `${data.state.name} lottery`,
+            `${data.state.name} ${data.game.name}`, 'past lottery numbers', 'lottery history', 'tonight\'s winning numbers',
+            'latest lottery draw', `check ${data.game.name} ticket`
+        ],
         openGraph: {
-            images: ['/og-image.png'], // Placeholder
+            title: `${data.game.name} Winning Numbers - ${data.state.name} Lottery`,
+            description: `Latest winning numbers for ${data.state.name} ${data.game.name}. Next jackpot: ${data.game.jackpot || 'Pending'}.`,
+            url: `https://allusalottery.com/results/${stateSlug}/${gameSlug}`,
+            images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+            type: 'website',
+            siteName: 'All USA Lottery',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: `${data.game.name} Winning Numbers - ${data.state.name}`,
+            description: `Did you win? Check the latest ${data.state.name} ${data.game.name} results!`,
+            images: ['/og-image.png'],
         }
     };
 }
@@ -122,7 +138,7 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                     <div className="flex flex-wrap items-center gap-6">
                         <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl">
                             <Calendar size={16} className="text-[#f59e0b]" />
-                            <span className="text-sm font-bold text-slate-600 uppercase tracking-wide">Next Draw: {game.nextDrawDate ? new Date(game.nextDrawDate).toLocaleDateString() : 'TBA'}</span>
+                            <span className="text-sm font-bold text-slate-600 uppercase tracking-wide">Next Draw: {game.nextDrawDate ? new Date(game.nextDrawDate).toLocaleDateString('en-US') : 'TBA'}</span>
                         </div>
                         <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 px-4 py-2 rounded-xl text-amber-900">
                             <TrendingUp size={16} />
@@ -163,7 +179,7 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                         <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row md:items-center gap-4">
                             <span className="text-slate-400 font-bold uppercase tracking-widest text-xs">Official Draw Date</span>
                             <span className="text-white font-black text-lg">
-                                {new Date(game.lastDrawDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                                {new Date(game.lastDrawDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                             </span>
                         </div>
                     </div>

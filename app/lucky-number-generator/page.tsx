@@ -2,9 +2,32 @@ import React from 'react';
 import LuckyGeneratorWrapper from '@/components/LuckyGeneratorWrapper';
 import { Target } from 'lucide-react';
 
-export const metadata = {
-  title: 'Advanced Lottery Lucky Number Generator - All USA Lottery',
-  description: 'Generate lucky numbers for 37 global lotteries including Mega Millions, Powerball, and advanced box combinations instantly.',
+import type { Metadata } from 'next';
+
+export const revalidate = 0;
+
+export const metadata: Metadata = {
+  title: 'Advanced Lottery Lucky Number Generator - Create Your Own Lottery | All USA Lottery',
+  description: 'Generate lucky numbers for Mega Millions, Powerball, and 30+ global lotteries instantly. Create custom combinations, wheels, and predictive box variations.',
+  keywords: [
+    'lucky number generator', 'lottery number generator', 'random number picker',
+    'Mega Millions generator', 'Powerball lucky numbers', 'create your own lottery',
+    'lottery algorithms', 'predictive lottery numbers', 'pick 3 generator', 'pick 4 generator',
+    'lottery ticket simulator', 'best lottery generator', 'lottery number predictor'
+  ],
+  openGraph: {
+    title: 'Advanced Lottery Lucky Number Generator & Simulator',
+    description: 'Generate lucky numbers, create custom lotteries, and test advanced combinations instantly.',
+    url: 'https://allusalottery.com/lucky-number-generator',
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Lucky Number Generator - Mega Millions & Powerball',
+    description: 'Generate predictive lottery numbers for 30+ games instantly.',
+    images: ['/og-image.png'],
+  }
 };
 
 export default function LuckyNumberGeneratorPage() {

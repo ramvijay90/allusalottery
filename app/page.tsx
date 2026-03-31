@@ -94,9 +94,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   const jackpotGames = await getTopJackpots();
 
   return (
-    <div className="pb-20">
+    <>
       {/* Hero Section */}
-      <section className="relative bg-[#0f172a] py-20 md:py-32 overflow-hidden">
+      <section className="relative bg-[#0f172a] py-20 md:py-32 overflow-hidden pb-32">
         {/* Background Effects */}
         <div className="absolute top-0 left-0 w-full h-full">
           <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/20 rounded-full blur-[120px]"></div>
@@ -197,7 +197,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             )}
           </div>
         </section>
-      </div>
+    </>
   );
 }
 

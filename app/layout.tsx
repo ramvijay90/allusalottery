@@ -4,25 +4,31 @@ import { Plus_Jakarta_Sans, Outfit } from 'next/font/google';
 import './globals.css';
 import Link from 'next/link';
 import { Lock, Trophy, Zap } from 'lucide-react';
+import MobileMenu from '@/components/MobileMenu';
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ['latin'] });
 const outfit = Outfit({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://allusalottery.com'),
-  title: 'AllUSALottery - Premium USA & Canada Lottery Results | Powerball & Mega Millions',
-  description: 'Fast, accurate, and live lottery results for USA and Canada. Get the latest winning numbers for Powerball, Mega Millions, Lotto America, Cash4Life, and state lotteries.',
-  keywords: ['USA Lottery', 'Mega Millions', 'Powerball', 'Winning Numbers', 'State Lottery Results', 'Lottery Jackpots', 'Lotto Numbers', 'Lucky Number Generator', 'Canada Lottery', 'Lotto Max'],
+  title: 'All USA Lottery - Live Real-Time Winning Numbers & Results',
+  description: 'Fast, accurate, and live lottery results for USA and Canada. Get the latest winning numbers for Powerball, Mega Millions, Lotto America, Cash4Life, and state lotteries immediately after drawing.',
+  keywords: [
+    'USA Lottery', 'Mega Millions', 'Powerball', 'Winning Numbers', 'State Lottery Results', 
+    'Lottery Jackpots', 'Lotto Numbers', 'Lucky Number Generator', 'Canada Lottery', 'Lotto Max',
+    'live lottery results', 'pick 3 pick 4 numbers', 'tonight\'s winning numbers', 'allusalottery'
+  ],
   openGraph: {
-    title: 'All USA Lottery - Real-Time Winning Numbers',
+    title: 'All USA Lottery - Real-Time Winning Numbers & Jackpots',
     description: 'The most professional platform for live lottery results in the US & Canada.',
     url: 'https://allusalottery.com',
     siteName: 'All USA Lottery',
     images: [
       {
-        url: '/favicon.ico', // Update with a proper OG image URL later if available
-        width: 800,
-        height: 600,
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'All USA Lottery Logo',
       },
     ],
     locale: 'en_US',
@@ -30,8 +36,20 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'All USA Lottery Results',
-    description: 'Instant USA & Canada lottery results (Powerball, Mega Millions, and more).',
+    title: 'All USA Lottery - Live Results & Jackpots',
+    description: 'Get the latest winning numbers for Mega Millions, Powerball, and all state lotteries instantly.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
@@ -82,9 +100,10 @@ export default function RootLayout({
             </nav>
 
             <div className="flex items-center gap-4">
-              <Link href="/#states" className="bg-[#0f172a] hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all text-center">
+              <Link href="/#states" className="hidden md:block bg-[#0f172a] hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all text-center  ">
                 Check Results
               </Link>
+              <MobileMenu />
             </div>
           </div>
         </header>

@@ -121,7 +121,7 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
                                             </h2>
                                             <div className="flex items-center gap-2 text-sm font-bold text-slate-400 mt-1 uppercase tracking-wider">
                                                 <Calendar size={14} className="text-[#f59e0b]" />
-                                                <span>{new Date(game.lastDrawDate).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                <span>{new Date(game.lastDrawDate).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                             </div>
                                         </div>
                                     </div>

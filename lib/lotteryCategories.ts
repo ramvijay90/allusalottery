@@ -1,4 +1,4 @@
-export type CategoryMode = 'standard' | 'box' | 'custom';
+export type CategoryMode = 'standard' | 'box' | 'custom' | 'digit-random' | 'number-random' | 'previous-result';
 
 export interface LotteryCategory {
   id: string;
@@ -15,7 +15,7 @@ export interface LotteryCategory {
 
 export const CATEGORIES: LotteryCategory[] = [
   { id: 'mega-millions', name: 'Mega Millions', mode: 'standard', mainBalls: 5, mainRange: [1, 70], specialBalls: 1, specialRange: [1, 25], specialName: 'Mega Ball' },
-  { id: 'lucky-number', name: 'Lucky Number', mode: 'standard', mainBalls: 5, mainRange: [1, 50] },
+  { id: 'lucky-number', name: 'Lucky Number', mode: 'number-random', mainRange: [1, 50] },
   { id: 'powerball', name: 'Power Ball', mode: 'standard', mainBalls: 5, mainRange: [1, 69], specialBalls: 1, specialRange: [1, 26], specialName: 'Powerball' },
   { id: 'lotto-america', name: 'Lotto America', mode: 'standard', mainBalls: 5, mainRange: [1, 52], specialBalls: 1, specialRange: [1, 10], specialName: 'Star Ball' },
   { id: 'cash-life', name: 'Cash Life', mode: 'standard', mainBalls: 5, mainRange: [1, 60], specialBalls: 1, specialRange: [1, 4], specialName: 'Cash Ball' },
@@ -43,12 +43,12 @@ export const CATEGORIES: LotteryCategory[] = [
   { id: 'fast-5', name: 'Fast 5', mode: 'standard', mainBalls: 5, mainRange: [1, 42] },
   { id: 'easy-6', name: 'Easy 6', mode: 'standard', mainBalls: 6, mainRange: [1, 39] },
   { id: 'mega-7', name: 'Mega 7', mode: 'standard', mainBalls: 7, mainRange: [1, 37] },
-  { id: 'digit', name: 'Digit', mode: 'box' },
+  { id: 'digit', name: 'Digit', mode: 'digit-random' },
   { id: '3-digit', name: '3 Digit', mode: 'box', customDigits: 3 },
   { id: '4-digit', name: '4 Digit', mode: 'box', customDigits: 4 },
   { id: '5-digit', name: '5 Digit', mode: 'box', customDigits: 5 },
   { id: 'all-possible', name: 'All Possible', mode: 'box' },
-  { id: 'previous-result', name: 'Previous Result', mode: 'standard', mainBalls: 5, mainRange: [1, 50] },
+  { id: 'previous-result', name: 'Previous Result', mode: 'previous-result' },
   { id: 'board', name: 'Board', mode: 'box' },
   { id: 'custom', name: 'Custom', mode: 'custom' }
 ];
