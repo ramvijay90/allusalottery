@@ -50,9 +50,10 @@ async function runAllStates() {
 }
 
 async function startScheduler() {
-    console.log('🕒 Scheduler Service Started');
+    console.log('🕒 Scheduler Service Started - Aggressive Mode');
     console.log('   - Hub Scraper: 2:00 AM Daily');
-    console.log('   - All States:  Every 15 Minutes');
+    console.log('   - History Backfill: 3:00 AM Daily');
+    console.log('   - Live Results (States): Every 10 Minutes');
 
     // 1. Hub Scraper - 2:00 AM
     cron.schedule('0 2 * * *', async () => {
@@ -60,19 +61,33 @@ async function startScheduler() {
         await runScript('hub_crawler.ts');
     });
 
-    // 2. All States - Every 15 minutes
-    cron.schedule('*/15 * * * *', async () => {
-        console.log('⏰ Cron Trigger: All States Batch');
+    // 2. Deep History Backfill - 3:00 AM Daily
+    cron.schedule('0 3 * * *', async () => {
+        console.log('⏰ Cron Trigger: Deep History Scraping Block');
+        await runScript('history_batch_runner.ts');
+    });
+
+    // 3. All States Live Results - Every 10 minutes
+    cron.schedule('*/10 * * * *', async () => {
+        console.log('⏰ Cron Trigger: Live Results Batch');
         await runAllStates();
     });
 
-    // Keep process alive
+    // 4. INSTANT INITIALIZATION 
+    // Always trigger immediately upon server boot so database isn't empty!
+    console.log('⚡ Triggering instant initial population (Bypassing cron timer)...');
+    runScript('hub_crawler.ts').then(() => {
+        runAllStates();
+    });
 }
 
 // Handle Command Line Args
 const args = process.argv.slice(2);
 if (args.includes('--run-now')) {
     runAllStates().then(() => process.exit(0));
+} else if (args.includes('--run-history')) {
+    console.log('⚡ Forced Manual Execution: Deep History');
+    runScript('history_batch_runner.ts').then(() => process.exit(0));
 } else {
     startScheduler();
 }
