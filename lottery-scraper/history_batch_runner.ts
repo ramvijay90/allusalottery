@@ -5,8 +5,9 @@ import Game from '../models/Game';
 import Result from '../models/Result';
 import connectToDatabase from '../lib/db';
 
-// Load env
+// Load env - Fallback chain for production/local
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env.production') });
 
 function runScript(stateSlug: string, gameSlug: string, year: number | null): Promise<void> {
     return new Promise((resolve, reject) => {
