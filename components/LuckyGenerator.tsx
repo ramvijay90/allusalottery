@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CATEGORIES, LotteryCategory } from '@/lib/lotteryCategories';
-import { RefreshCw, Copy, Trash2, Wand2 } from 'lucide-react';
+import { RefreshCw, Copy, Trash2, Wand2, Share2, Facebook, Send, MessageCircle } from 'lucide-react';
 
 export default function LuckyGenerator() {
   const [activeCategory, setActiveCategory] = useState<LotteryCategory>(CATEGORIES[0]);
@@ -28,11 +28,13 @@ export default function LuckyGenerator() {
   // Results State
   const [results, setResults] = useState<any[]>([]);
   const [copied, setCopied] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
 
   // Board Strategy State
   const [boards, setBoards] = useState<Record<string, string[]>>({});
   const boardNames = ['A', 'B', 'C', 'D', 'E'];
   const [activeBoardTab, setActiveBoardTab] = useState('A');
+  const [boardType, setBoardType] = useState<number>(3); // 3, 4, or 5
 
   // Custom Category State
   const [customMainBalls, setCustomMainBalls] = useState(5);
@@ -68,15 +70,16 @@ export default function LuckyGenerator() {
       setEvenMode(false);
     }
 
-    // Initialize Boards ONLY for the 'Board' category
-    if (activeCategory.id === 'board') {
+    // Initialize Boards for Box/Board categories
+    if (activeCategory.mode === 'box') {
       const initial: Record<string, string[]> = {};
-      const count = activeCategory.customDigits || 3;
+      const count = activeCategory.customDigits || (activeCategory.id === 'board' ? boardType : 3);
       for (let i = 0; i < count; i++) {
         initial[boardNames[i]] = [];
       }
       setBoards(initial);
       setActiveBoardTab('A');
+      setTicketCount(activeCategory.id === 'board' ? 5 : 1);
     }
 
     setResults([]);
@@ -214,62 +217,118 @@ export default function LuckyGenerator() {
   };
 
   const generateBoardLines = () => {
-    const activeBoardKeys = Object.keys(boards);
-    if (activeBoardKeys.length === 0) return;
-
-    const mappedBoards = activeBoardKeys.map(k => {
-      // If no digits are selected for a board, use '*' as wildcard
-      if (boards[k]?.length > 0) return boards[k];
-      return ['*'];
-    });
-
-    const f = (a: string[][]): string[][] =>
-      a.reduce((a, b) => a.flatMap(d => b.map(e => [...d, e])), [[]] as string[][]);
-
-    const permutations = f(mappedBoards);
-    const output: string[] = [];
-
-    let globalAttempts = 0;
-
-    for (const perm of permutations) {
-      if (output.length >= ticketCount * permutations.length) break;
-
-      let branchYield = 0;
-      let branchAttempts = 0;
-
-      while (branchYield < ticketCount && branchAttempts < 100000) {
-        branchAttempts++;
-        globalAttempts++;
-        let currentString = '';
-
-        for (let i = 0; i < perm.length; i++) {
-          if (perm[i] === '*') {
-            currentString += Math.floor(Math.random() * 10).toString();
-          } else {
-            currentString += perm[i];
-          }
-        }
-
-        const lastDigit = parseInt(currentString.charAt(currentString.length - 1));
-        const isOdd = lastDigit % 2 !== 0;
-        const isEven = lastDigit % 2 === 0;
-
-        if (oddMode && !isOdd) continue;
-        if (evenMode && !isEven) continue;
-
-        if (noRepeat && output.includes(currentString)) continue;
-
-        output.push(currentString);
-        branchYield++;
+    // 1. All Possible (Permutations) Mode
+    if (activeCategory.id === 'all-possible') {
+      if (!boxInput) return;
+      if (boxInput.length < comboLength) {
+        alert("Number pool must be at least as long as your combination digits.");
+        return;
       }
-    }
-
-    if (globalAttempts >= 100000 && output.length === 0) {
-      alert("Could not generate numbers with these strict constraints.");
+      const perms = getKPermutations(boxInput, comboLength);
+      setResults([{ box: perms }]);
       return;
     }
 
-    setResults([{ box: output }]);
+    // 2. 3, 4, 5 Digit Tab Logic (Cartesian Product - All possible)
+    if (activeCategory.id !== 'board') {
+      const boardKeys = Object.keys(boards).sort();
+      if (boardKeys.length === 0) return;
+      
+      const boardEntries = boardKeys.map(k => boards[k] || []);
+      if (boardEntries.some(arr => arr.length === 0)) {
+        alert("Please select at least one digit for each Board!");
+        return;
+      }
+
+      const cartesian = (a: string[][]): string[][] =>
+        a.reduce((a, b) => a.flatMap(d => b.map(e => [...d, e])), [[]] as string[][]);
+
+      const permutations = cartesian(boardEntries);
+      const combinations = permutations.map(p => p.join(''));
+      setResults([{ box: combinations }]);
+      return;
+    }
+
+    // 3. Board Tab Logic (Cartesian Product of selected digits * ticketCount)
+    const boardKeys = Object.keys(boards).sort();
+    if (boardKeys.length === 0) return;
+
+    // Identify which boards have selections
+    const lockedBoardsSelections: string[][] = [];
+    const lockedKeys: string[] = [];
+    const allChoices: Record<string, string[]> = {};
+
+    for (const key of boardKeys) {
+      const choices = boards[key] && boards[key].length > 0 ? boards[key] : [];
+      if (choices.length > 0) {
+        lockedBoardsSelections.push(choices);
+        lockedKeys.push(key);
+      }
+      allChoices[key] = choices.length > 0 ? choices : ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    }
+
+    // Cartesian product of locked boards
+    const cartesian = (a: string[][]): string[][] =>
+      a.reduce((a, b) => a.flatMap(d => b.map(e => [...d, e])), [[]] as string[][]);
+
+    const locks = lockedBoardsSelections.length > 0 ? cartesian(lockedBoardsSelections) : [[]];
+
+    const lines: string[] = [];
+    for (const lock of locks) {
+      // Map the lock back to keys
+      const lockMap: Record<string, string> = {};
+      lock.forEach((val, idx) => {
+        lockMap[lockedKeys[idx]] = val;
+      });
+
+      for (let i = 0; i < ticketCount; i++) {
+        let attempts = 0;
+        let validLine = null;
+        while (attempts < 1000) {
+          attempts++;
+          let res = '';
+          const usedInLine: string[] = [];
+
+          for (const key of boardKeys) {
+            // If the board is locked for this iteration, use the lock value
+            if (lockMap[key] !== undefined) {
+              const digit = lockMap[key];
+              res += digit;
+              usedInLine.push(digit);
+            } else {
+              // Otherwise pick randomly from 0-9
+              let pool = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].filter(c => !noRepeat || !usedInLine.includes(c));
+              if (pool.length === 0) break;
+              const digit = pool[Math.floor(Math.random() * pool.length)];
+              res += digit;
+              usedInLine.push(digit);
+            }
+          }
+
+          if (res.length < boardKeys.length) continue;
+
+          // Optional constraints
+          const lastDigit = parseInt(res.charAt(res.length - 1));
+          const isOdd = lastDigit % 2 !== 0;
+          const isEven = lastDigit % 2 === 0;
+
+          if (oddMode && !isOdd) continue;
+          if (evenMode && !isEven) continue;
+          if (noRepeat && lines.includes(res)) continue;
+
+          validLine = res;
+          break;
+        }
+        if (validLine) lines.push(validLine);
+      }
+    }
+
+    if (lines.length === 0 && ticketCount > 0) {
+      alert("Failed to generate any valid lines with current constraints.");
+      return;
+    }
+
+    setResults([{ box: lines }]);
   };
 
   const generateDigitRandomLines = () => {
@@ -347,23 +406,33 @@ export default function LuckyGenerator() {
     if (activeCategory.mode === 'digit-random') generateDigitRandomLines();
     else if (activeCategory.mode === 'number-random') generateNumberRandomLines();
     else if (activeCategory.mode === 'previous-result') generatePreviousResultLines();
-    else if (activeCategory.id === 'board' && activeCategory.mode === 'box') generateBoardLines();
-    else if (activeCategory.mode === 'box') generateBoxLines();
+    else if (activeCategory.mode === 'box') generateBoardLines();
     else generateStandardLines();
     setCopied(false);
+    setShowShareOptions(false);
   };
 
-  const handleCopy = () => {
-    if (results.length === 0) return;
-    let text = '';
+  const getFormattedResults = () => {
+    if (results.length === 0) return '';
+    const title = "Lucky Number Generator";
+    const categoryHeader = `Generate Numbers: ${activeCategory.name}`;
+    let content = '';
 
-    if (activeCategory.mode === 'box' || activeCategory.mode === 'digit-random') {
-      text = `${activeCategory.name}\n` + results[0].box.join(', ');
+    if (activeCategory.mode === 'box' || activeCategory.mode === 'digit-random' || activeCategory.mode === 'previous-result') {
+      content = results[0]?.box?.join(', ') || '';
     } else {
-      text = `${activeCategory.name}\n` + results.map(r =>
+      content = results.map(r =>
         r.main.join(' - ') + (r.special?.length ? ` [${r.special.join(' - ')}]` : '')
       ).join('\n');
     }
+
+    return `${title}\n${categoryHeader}\n\n${content}\n\nGenerated by All USA Lottery`;
+  };
+
+  const handleCopy = () => {
+    const text = getFormattedResults();
+    if (!text) return;
+
     // Use modern API if available (HTTPS or localhost)
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(text).catch(err => console.error(err));
@@ -386,7 +455,40 @@ export default function LuckyGenerator() {
     }
 
     setCopied(true);
+    setShowShareOptions(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareSocial = async (platform: 'whatsapp' | 'telegram' | 'facebook' | 'native') => {
+    const text = getFormattedResults();
+    const url = window.location.href;
+    const encodedText = encodeURIComponent(text);
+    const encodedUrl = encodeURIComponent(url);
+
+    if (platform === 'native') {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Lucky Numbers - ${activeCategory.name}`,
+            text: text,
+          });
+        } catch (err) {
+          if ((err as Error).name !== 'AbortError') {
+            console.error('Error sharing:', err);
+          }
+        }
+      } else {
+        alert("Native sharing not supported on this browser.");
+      }
+      return;
+    }
+
+    let shareUrl = '';
+    if (platform === 'whatsapp') shareUrl = `https://wa.me/?text=${encodedText}`;
+    else if (platform === 'telegram') shareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
+    else if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+
+    window.open(shareUrl, '_blank');
   };
 
   return (
@@ -414,17 +516,83 @@ export default function LuckyGenerator() {
             <Wand2 size={16} className="text-[#f59e0b]" /> {activeCategory.name}
           </h3>
 
-          {(activeCategory.mode === 'standard' || activeCategory.mode === 'number-random' || activeCategory.mode === 'previous-result') && (
-            <div className="w-full space-y-3">
+          {(activeCategory.mode === 'standard' || activeCategory.mode === 'number-random' || activeCategory.mode === 'previous-result' || activeCategory.id === 'board') && (
+            <div className="w-full space-y-4">
+              {activeCategory.id === 'board' && (
+                <div className="flex flex-col items-center pb-2">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 text-center">Board Count</label>
+                  <div className="flex gap-2">
+                    {[3, 4, 5].map(num => (
+                      <button
+                        key={num}
+                        onClick={() => {
+                          setBoardType(num);
+                          const initial: Record<string, string[]> = {};
+                          for (let i = 0; i < num; i++) {
+                            initial[boardNames[i]] = [];
+                          }
+                          setBoards(initial);
+                          setActiveBoardTab('A');
+                          setResults([]);
+                        }}
+                        className={`w-10 h-10 rounded-xl font-black text-sm transition-all border-2 ${boardType === num
+                          ? 'bg-[#0f172a] border-[#0f172a] text-[#f59e0b] shadow-md'
+                          : 'bg-white border-slate-100 text-slate-400 hover:border-slate-200'
+                          }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col items-center">
-                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 text-center">{activeCategory.mode === 'standard' ? 'Tickets' : 'Numbers'}</label>
+                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 text-center">
+                  {activeCategory.mode === 'standard' ? 'Tickets' : (activeCategory.id === 'board' ? 'Numbers to Generate' : 'Numbers')}
+                </label>
                 <input
-                  type="number" min="1" max="100"
+                  type="number" min="1" max="1000"
                   value={ticketCount}
                   onChange={(e) => setTicketCount(parseInt(e.target.value) || 1)}
                   className="w-16 bg-white border border-slate-200 rounded-lg py-1 font-bold text-center text-xs focus:outline-none focus:ring-2 focus:ring-[#f59e0b]/50"
                 />
               </div>
+
+              {activeCategory.id === 'board' && (
+                <div className="w-full space-y-4 py-2">
+                  <div className="w-full flex flex-col items-center">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 text-center">Select Board</label>
+                    <select
+                      value={activeBoardTab}
+                      onChange={(e) => setActiveBoardTab(e.target.value)}
+                      className="w-full bg-white border-2 border-slate-100 rounded-2xl py-2 px-4 font-black text-sm text-center shadow-sm focus:outline-none appearance-none cursor-pointer"
+                    >
+                      {Object.keys(boards).sort().map(key => (
+                        <option key={key} value={key}>Board {key}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="w-full flex flex-col items-center">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 text-center">Choose a Number (0 - 9)</label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
+                        <button
+                          key={num}
+                          onClick={() => toggleDigit(activeBoardTab, num)}
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-base transition-all border-2 ${boards[activeBoardTab]?.includes(num)
+                            ? 'bg-[#f59e0b] border-amber-500 text-white shadow-md'
+                            : 'bg-white border-slate-50 text-slate-300 hover:border-slate-200'
+                            }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {activeCategory.mode === 'previous-result' ? (
                 <div className="flex flex-col items-center pt-2">
@@ -560,128 +728,58 @@ export default function LuckyGenerator() {
             </div>
           )}
 
-          {activeCategory.mode === 'box' && activeCategory.id === 'board' && (
+          {activeCategory.mode === 'box' && activeCategory.id !== 'all-possible' && activeCategory.id !== 'board' && (
             <div className="w-full space-y-6">
-              <div className="flex flex-col items-center">
-                <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 text-center">Numbers to Generate</label>
-                <input
-                  type="number" min="1" max="1000"
-                  value={ticketCount}
-                  onChange={(e) => setTicketCount(parseInt(e.target.value) || 1)}
-                  className="w-16 bg-white border border-slate-200 rounded-lg py-1 font-bold text-center text-xs focus:outline-none focus:ring-2 focus:ring-[#f59e0b]/50"
-                />
-              </div>
-
-              <div className="flex flex-col items-center">
-              {activeCategory.id === 'board' ? (
-                <div className="space-y-6">
-                  <div className="flex flex-col items-center">
-                    <label className="text-[10px] font-black text-[#0f172a] uppercase tracking-widest mb-1 text-center">Select Board</label>
-                    <div className="relative w-40">
-                      <select
-                        value={activeBoardTab}
-                        onChange={e => setActiveBoardTab(e.target.value)}
-                        className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-2 font-black text-center shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f59e0b]/50 cursor-pointer appearance-none text-[#0f172a]"
-                      >
-                        {Object.keys(boards).map(key => (
-                          <option key={key} value={key}>Board {key}</option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                      </div>
+              <div className="space-y-4">
+                {Object.keys(boards).map((boardKey) => (
+                  <div key={boardKey} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <div className="min-w-[80px] text-center sm:text-left">
+                      <span className="text-xs font-black text-[#0f172a] uppercase tracking-wider">Board {boardKey}</span>
+                    </div>
+                    <div className="flex flex-wrap justify-center sm:justify-start gap-1.5 flex-1">
+                      {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
+                        <button
+                          key={num}
+                          onClick={() => toggleDigit(boardKey, num)}
+                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl text-sm sm:text-lg font-black transition-all border ${boards[boardKey]?.includes(num)
+                            ? 'bg-[#f59e0b] border-amber-600 text-[#0f172a] shadow-sm scale-110 ring-2 ring-amber-200'
+                            : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-[#f59e0b]/50 hover:text-[#f59e0b] hover:scale-105'
+                            }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
                     </div>
                   </div>
-
-                  {boards[activeBoardTab] && (
-                    <div className="space-y-4 pt-2">
-                      <div className="flex flex-col items-center">
-                        <label className="text-[10px] font-black text-[#0f172a] uppercase tracking-[0.2em] mb-3 text-center">Choose a Number (0-9)</label>
-                        <div className="flex flex-wrap gap-2 justify-center max-w-[280px]">
-                          {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
-                            <button
-                              key={num}
-                              onClick={() => toggleDigit(activeBoardTab, num)}
-                              className={`w-10 h-10 rounded-xl text-lg font-black transition-all border ${boards[activeBoardTab]?.includes(num)
-                                ? 'bg-[#f59e0b] border-amber-600 text-[#0f172a] shadow-sm scale-110'
-                                : 'bg-white border-slate-200 text-slate-400 hover:border-[#f59e0b]/50 hover:text-[#f59e0b] hover:scale-105'
-                                }`}
-                            >
-                              {num}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="w-full flex flex-row gap-2 sm:gap-4 justify-center items-start overflow-x-auto pb-4 custom-scrollbar px-2">
-                  {Object.keys(boards).map((boardKey) => (
-                    <div key={boardKey} className="flex flex-col items-center gap-3">
-                      <div className="bg-[#0f172a] text-white px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter w-full text-center shadow-md">
-                        Board {boardKey}
-                      </div>
-                      <div className="flex flex-col gap-1.5 p-1 bg-white border border-slate-100 rounded-xl shadow-sm">
-                        {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
-                          <button
-                            key={num}
-                            onClick={() => toggleDigit(boardKey, num)}
-                            className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg text-xs sm:text-base font-black transition-all border ${boards[boardKey]?.includes(num)
-                                ? 'bg-[#f59e0b] border-amber-500 text-[#0f172a] shadow-sm scale-105'
-                                : 'bg-white border-slate-100 text-slate-400 hover:border-[#f59e0b]/30 hover:text-[#f59e0b] hover:scale-105'
-                              }`}
-                          >
-                            {num}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              </div>
-
-              <div className="flex gap-4 justify-center pt-2 border-t border-slate-100">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" checked={oddMode} onChange={e => { setOddMode(e.target.checked); if (e.target.checked) setEvenMode(false); }} className="w-3.5 h-3.5 rounded text-[#f59e0b] focus:ring-[#f59e0b]" />
-                  <span className="text-[10px] font-bold text-slate-600 group-hover:text-slate-900 uppercase">End with Odd</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input type="checkbox" checked={evenMode} onChange={e => { setEvenMode(e.target.checked); if (e.target.checked) setOddMode(false); }} className="w-3.5 h-3.5 rounded text-[#f59e0b] focus:ring-[#f59e0b]" />
-                  <span className="text-[10px] font-bold text-slate-600 group-hover:text-slate-900 uppercase">End with Even</span>
-                </label>
+                ))}
               </div>
             </div>
           )}
 
-          {activeCategory.mode === 'box' && activeCategory.id !== 'board' && (
-            <div className={`w-full ${activeCategory.id === 'all-possible' ? 'grid grid-cols-2 gap-4' : 'space-y-4'}`}>
+          {activeCategory.mode === 'box' && activeCategory.id === 'all-possible' && (
+            <div className="w-full grid grid-cols-1 gap-4">
               <div className="flex flex-col items-center">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 text-center">{activeCategory.id === 'all-possible' ? 'Base Numbers' : 'Enter Number'}</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 text-center">Base Numbers</label>
                 <input
                   type="text"
                   maxLength={10}
                   value={boxInput}
                   onChange={(e) => setBoxInput(e.target.value.replace(/[^0-9]/g, ''))}
-                  placeholder={`e.g. 123`}
+                  placeholder="e.g. 123"
                   className="w-full bg-white border-2 border-slate-100 rounded-2xl py-3 font-black text-2xl text-center tracking-[0.3em] shadow-sm focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all font-mono"
                 />
               </div>
-
-              {activeCategory.id === 'all-possible' && (
-                <div className="flex flex-col items-center">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 text-center">Digits</label>
-                  <input
-                    type="number"
-                    min="2"
-                    max={boxInput.length > 2 ? Math.min(boxInput.length, 10) : 10}
-                    value={comboLength}
-                    onChange={(e) => setComboLength(parseInt(e.target.value) || 2)}
-                    className="w-full bg-white border-2 border-slate-100 rounded-2xl py-3 font-black text-2xl text-center shadow-sm focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all font-mono"
-                  />
-                </div>
-              )}
+              <div className="flex flex-col items-center">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 text-center">Digits</label>
+                <input
+                  type="number"
+                  min="2"
+                  max={boxInput.length > 2 ? Math.min(boxInput.length, 10) : 10}
+                  value={comboLength}
+                  onChange={(e) => setComboLength(parseInt(e.target.value) || 2)}
+                  className="w-full bg-white border-2 border-slate-100 rounded-2xl py-3 font-black text-2xl text-center shadow-sm focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all font-mono"
+                />
+              </div>
             </div>
           )}
 
@@ -690,7 +788,7 @@ export default function LuckyGenerator() {
               onClick={generate}
               className="bg-[#f59e0b] hover:bg-amber-500 text-[#0f172a] font-black py-3.5 px-12 rounded-full shadow-xl shadow-amber-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3 text-xs uppercase tracking-[0.2em]"
             >
-              <RefreshCw size={14} className={results.length > 0 ? '' : ''} /> {activeCategory.id === 'all-possible' ? 'GENERATE BOX' : 'GENERATE'}
+              <RefreshCw size={14} className="" /> {activeCategory.id === 'all-possible' ? 'GENERATE BOX' : 'GENERATE'}
             </button>
           </div>
         </div>
@@ -757,6 +855,43 @@ export default function LuckyGenerator() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {results.length > 0 && showShareOptions && (
+              <div className="mt-auto pt-8 flex flex-col items-center gap-4 border-t border-slate-50 mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center gap-2 text-slate-400">
+                  <div className="h-[1px] w-8 bg-slate-100"></div>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">Share results</span>
+                  <div className="h-[1px] w-8 bg-slate-100"></div>
+                </div>
+                
+                <div className="flex gap-6">
+                  <button onClick={() => shareSocial('whatsapp')} className="flex flex-col items-center gap-2 group">
+                    <div className="w-12 h-12 rounded-2xl bg-[#25d366] text-white flex items-center justify-center shadow-lg shadow-green-500/20 group-hover:scale-110 transition-all">
+                      <MessageCircle size={24} />
+                    </div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">WhatsApp</span>
+                  </button>
+                  <button onClick={() => shareSocial('telegram')} className="flex flex-col items-center gap-2 group">
+                    <div className="w-12 h-12 rounded-2xl bg-[#0088cc] text-white flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-all">
+                      <Send size={24} />
+                    </div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Telegram</span>
+                  </button>
+                  <button onClick={() => shareSocial('facebook')} className="flex flex-col items-center gap-2 group">
+                    <div className="w-12 h-12 rounded-2xl bg-[#1877f2] text-white flex items-center justify-center shadow-lg shadow-blue-600/20 group-hover:scale-110 transition-all">
+                      <Facebook size={24} />
+                    </div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Facebook</span>
+                  </button>
+                  <button onClick={() => shareSocial('native')} className="flex flex-col items-center gap-2 group">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-800 text-white flex items-center justify-center shadow-lg shadow-slate-900/20 group-hover:scale-110 transition-all">
+                      <Share2 size={24} />
+                    </div>
+                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Share Via</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
