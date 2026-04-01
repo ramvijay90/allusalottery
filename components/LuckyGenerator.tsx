@@ -18,7 +18,7 @@ export default function LuckyGenerator() {
   // Box Strategy State
   const [boxInput, setBoxInput] = useState('');
   const [comboLength, setComboLength] = useState(3);
-  
+
   // Previous Result State
   const [previousResultInput, setPreviousResultInput] = useState('');
 
@@ -68,8 +68,8 @@ export default function LuckyGenerator() {
       setEvenMode(false);
     }
 
-    // Initialize Boards for digit modes
-    if (activeCategory.id.includes('digit') || activeCategory.id === 'board') {
+    // Initialize Boards ONLY for the 'Board' category
+    if (activeCategory.id === 'board') {
       const initial: Record<string, string[]> = {};
       const count = activeCategory.customDigits || 3;
       for (let i = 0; i < count; i++) {
@@ -121,21 +121,21 @@ export default function LuckyGenerator() {
         let spl = [];
         const specMin = isCustom ? 1 : (activeCategory.specialRange?.[0] || 1);
         const specMax = isCustom ? customSpecialMax : (activeCategory.specialRange?.[1] || 25);
-        
+
         let specPool = [];
         for (let x = specMin; x <= specMax; x++) {
-            specPool.push(x);
+          specPool.push(x);
         }
-        
+
         if (specPool.length < specialNeed && noRepeat) {
-            alert("Not enough bonus ball pool numbers for constraints!");
-            return;
+          alert("Not enough bonus ball pool numbers for constraints!");
+          return;
         }
 
         for (let j = 0; j < specialNeed; j++) {
           const randIndex = Math.floor(Math.random() * specPool.length);
           spl.push(specPool[randIndex]);
-          if(noRepeat) specPool.splice(randIndex, 1);
+          if (noRepeat) specPool.splice(randIndex, 1);
         }
         lines.push({ main: line, special: spl });
       } else {
@@ -163,24 +163,24 @@ export default function LuckyGenerator() {
 
     const output: number[] = [];
     let currentPool = [...pool];
-    
+
     for (let i = 0; i < ticketCount; i++) {
-        if (noRepeat) {
-            const index = Math.floor(Math.random() * currentPool.length);
-            output.push(currentPool.splice(index, 1)[0]);
-        } else {
-            const index = Math.floor(Math.random() * currentPool.length);
-            output.push(currentPool[index]);
-        }
+      if (noRepeat) {
+        const index = Math.floor(Math.random() * currentPool.length);
+        output.push(currentPool.splice(index, 1)[0]);
+      } else {
+        const index = Math.floor(Math.random() * currentPool.length);
+        output.push(currentPool[index]);
+      }
     }
-    
-    setResults([{ main: output.sort((a,b) => a - b) }]);
+
+    setResults([{ main: output.sort((a, b) => a - b) }]);
   };
 
   const getKPermutations = (str: string, k: number): string[] => {
     if (k === 0) return [''];
     if (k === 1) return Array.from(new Set(str.split('')));
-    
+
     const perms = new Set<string>();
     for (let i = 0; i < str.length; i++) {
       const char = str[i];
@@ -218,7 +218,8 @@ export default function LuckyGenerator() {
     if (activeBoardKeys.length === 0) return;
 
     const mappedBoards = activeBoardKeys.map(k => {
-      if (k === activeBoardTab && boards[k].length > 0) return boards[k]; 
+      // If no digits are selected for a board, use '*' as wildcard
+      if (boards[k]?.length > 0) return boards[k];
       return ['*'];
     });
 
@@ -232,15 +233,15 @@ export default function LuckyGenerator() {
 
     for (const perm of permutations) {
       if (output.length >= ticketCount * permutations.length) break;
-      
+
       let branchYield = 0;
       let branchAttempts = 0;
-      
+
       while (branchYield < ticketCount && branchAttempts < 100000) {
         branchAttempts++;
         globalAttempts++;
         let currentString = '';
-        
+
         for (let i = 0; i < perm.length; i++) {
           if (perm[i] === '*') {
             currentString += Math.floor(Math.random() * 10).toString();
@@ -248,7 +249,7 @@ export default function LuckyGenerator() {
             currentString += perm[i];
           }
         }
-        
+
         const lastDigit = parseInt(currentString.charAt(currentString.length - 1));
         const isOdd = lastDigit % 2 !== 0;
         const isEven = lastDigit % 2 === 0;
@@ -257,7 +258,7 @@ export default function LuckyGenerator() {
         if (evenMode && !isEven) continue;
 
         if (noRepeat && output.includes(currentString)) continue;
-        
+
         output.push(currentString);
         branchYield++;
       }
@@ -267,7 +268,7 @@ export default function LuckyGenerator() {
       alert("Could not generate numbers with these strict constraints.");
       return;
     }
-    
+
     setResults([{ box: output }]);
   };
 
@@ -281,7 +282,7 @@ export default function LuckyGenerator() {
         for (let j = 0; j < digitLength; j++) {
           numStr += Math.floor(Math.random() * 10).toString();
         }
-        
+
         const lastDigit = parseInt(numStr.charAt(numStr.length - 1));
         const isOdd = lastDigit % 2 !== 0;
         const isEven = lastDigit % 2 === 0;
@@ -302,11 +303,11 @@ export default function LuckyGenerator() {
       alert("Please enter a Previous Result between 2 and 5 digits long.");
       return;
     }
-    
+
     const width = previousResultInput.length;
     const maxVal = Math.pow(10, width) - 1;
     const output: string[] = [];
-    
+
     let possibleSpace = maxVal + 1;
     if (oddMode || evenMode) possibleSpace /= 2;
     if (noRepeat && ticketCount > possibleSpace) {
@@ -318,19 +319,19 @@ export default function LuckyGenerator() {
     while (output.length < ticketCount && attempts < 100000) {
       attempts++;
       const num = Math.floor(Math.random() * (maxVal + 1));
-      
+
       const isOdd = num % 2 !== 0;
       const isEven = num % 2 === 0;
-      
+
       if (oddMode && !isOdd) continue;
       if (evenMode && !isEven) continue;
-      
+
       const strVal = num.toString().padStart(width, '0');
       if (noRepeat && output.includes(strVal)) continue;
-      
+
       output.push(strVal);
     }
-    
+
     setResults([{ box: output }]);
   };
 
@@ -346,7 +347,7 @@ export default function LuckyGenerator() {
     if (activeCategory.mode === 'digit-random') generateDigitRandomLines();
     else if (activeCategory.mode === 'number-random') generateNumberRandomLines();
     else if (activeCategory.mode === 'previous-result') generatePreviousResultLines();
-    else if ((activeCategory.id.includes('digit') || activeCategory.id === 'board') && activeCategory.id !== 'all-possible' && activeCategory.mode === 'box') generateBoardLines();
+    else if (activeCategory.id === 'board' && activeCategory.mode === 'box') generateBoardLines();
     else if (activeCategory.mode === 'box') generateBoxLines();
     else generateStandardLines();
     setCopied(false);
@@ -424,7 +425,7 @@ export default function LuckyGenerator() {
                   className="w-16 bg-white border border-slate-200 rounded-lg py-1 font-bold text-center text-xs focus:outline-none focus:ring-2 focus:ring-[#f59e0b]/50"
                 />
               </div>
-              
+
               {activeCategory.mode === 'previous-result' ? (
                 <div className="flex flex-col items-center pt-2">
                   <label className="text-[10px] font-black text-[#0f172a] uppercase tracking-widest mb-1 text-center">Previous Result</label>
@@ -487,10 +488,10 @@ export default function LuckyGenerator() {
                   type="number" min="2" max="5"
                   value={digitLength}
                   onChange={(e) => {
-                     let val = parseInt(e.target.value) || 3;
-                     if(val < 2) val = 2;
-                     if(val > 5) val = 5;
-                     setDigitLength(val);
+                    let val = parseInt(e.target.value) || 3;
+                    if (val < 2) val = 2;
+                    if (val > 5) val = 5;
+                    setDigitLength(val);
                   }}
                   className="w-16 bg-white border border-slate-200 rounded-lg py-1 font-bold text-center text-xs focus:outline-none focus:ring-2 focus:ring-[#f59e0b]/50"
                 />
@@ -549,7 +550,7 @@ export default function LuckyGenerator() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-1.5 pt-2 flex flex-col items-center border-t border-slate-100">
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <input type="checkbox" checked={noRepeat} onChange={e => setNoRepeat(e.target.checked)} className="w-3.5 h-3.5 rounded text-[#f59e0b] focus:ring-[#f59e0b]" />
@@ -559,7 +560,7 @@ export default function LuckyGenerator() {
             </div>
           )}
 
-          {activeCategory.mode === 'box' && (activeCategory.id.includes('digit') || activeCategory.id === 'board') && activeCategory.id !== 'all-possible' && (
+          {activeCategory.mode === 'box' && activeCategory.id === 'board' && (
             <div className="w-full space-y-6">
               <div className="flex flex-col items-center">
                 <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1 text-center">Numbers to Generate</label>
@@ -572,45 +573,75 @@ export default function LuckyGenerator() {
               </div>
 
               <div className="flex flex-col items-center">
-                <label className="text-[10px] font-black text-[#0f172a] uppercase tracking-widest mb-1 text-center">Select Board</label>
-                <div className="relative w-40">
-                  <select
-                    value={activeBoardTab}
-                    onChange={e => setActiveBoardTab(e.target.value)}
-                    className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-2 font-black text-center shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f59e0b]/50 cursor-pointer appearance-none text-[#0f172a]"
-                  >
-                    {Object.keys(boards).map(key => (
-                      <option key={key} value={key}>Board {key}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                  </div>
-                </div>
-              </div>
-
-              {boards[activeBoardTab] && (
-                <div className="space-y-4 pt-2">
+              {activeCategory.id === 'board' ? (
+                <div className="space-y-6">
                   <div className="flex flex-col items-center">
-                     <label className="text-[10px] font-black text-[#0f172a] uppercase tracking-[0.2em] mb-3 text-center">Choose a Number (0-9)</label>
-                     <div className="flex flex-wrap gap-2 justify-center max-w-[280px]">
-                      {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
-                        <button
-                          key={num}
-                          onClick={() => toggleDigit(activeBoardTab, num)}
-                          className={`w-10 h-10 rounded-xl text-lg font-black transition-all border ${boards[activeBoardTab].includes(num)
-                              ? 'bg-[#f59e0b] border-amber-600 text-[#0f172a] shadow-sm scale-110'
-                              : 'bg-white border-slate-200 text-slate-400 hover:border-[#f59e0b]/50 hover:text-[#f59e0b] hover:scale-105'
-                            }`}
-                        >
-                          {num}
-                        </button>
-                      ))}
-                     </div>
+                    <label className="text-[10px] font-black text-[#0f172a] uppercase tracking-widest mb-1 text-center">Select Board</label>
+                    <div className="relative w-40">
+                      <select
+                        value={activeBoardTab}
+                        onChange={e => setActiveBoardTab(e.target.value)}
+                        className="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-2 font-black text-center shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f59e0b]/50 cursor-pointer appearance-none text-[#0f172a]"
+                      >
+                        {Object.keys(boards).map(key => (
+                          <option key={key} value={key}>Board {key}</option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                      </div>
+                    </div>
                   </div>
+
+                  {boards[activeBoardTab] && (
+                    <div className="space-y-4 pt-2">
+                      <div className="flex flex-col items-center">
+                        <label className="text-[10px] font-black text-[#0f172a] uppercase tracking-[0.2em] mb-3 text-center">Choose a Number (0-9)</label>
+                        <div className="flex flex-wrap gap-2 justify-center max-w-[280px]">
+                          {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
+                            <button
+                              key={num}
+                              onClick={() => toggleDigit(activeBoardTab, num)}
+                              className={`w-10 h-10 rounded-xl text-lg font-black transition-all border ${boards[activeBoardTab]?.includes(num)
+                                ? 'bg-[#f59e0b] border-amber-600 text-[#0f172a] shadow-sm scale-110'
+                                : 'bg-white border-slate-200 text-slate-400 hover:border-[#f59e0b]/50 hover:text-[#f59e0b] hover:scale-105'
+                                }`}
+                            >
+                              {num}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="w-full flex flex-row gap-2 sm:gap-4 justify-center items-start overflow-x-auto pb-4 custom-scrollbar px-2">
+                  {Object.keys(boards).map((boardKey) => (
+                    <div key={boardKey} className="flex flex-col items-center gap-3">
+                      <div className="bg-[#0f172a] text-white px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter w-full text-center shadow-md">
+                        Board {boardKey}
+                      </div>
+                      <div className="flex flex-col gap-1.5 p-1 bg-white border border-slate-100 rounded-xl shadow-sm">
+                        {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
+                          <button
+                            key={num}
+                            onClick={() => toggleDigit(boardKey, num)}
+                            className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg text-xs sm:text-base font-black transition-all border ${boards[boardKey]?.includes(num)
+                                ? 'bg-[#f59e0b] border-amber-500 text-[#0f172a] shadow-sm scale-105'
+                                : 'bg-white border-slate-100 text-slate-400 hover:border-[#f59e0b]/30 hover:text-[#f59e0b] hover:scale-105'
+                              }`}
+                          >
+                            {num}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-              
+              </div>
+
               <div className="flex gap-4 justify-center pt-2 border-t border-slate-100">
                 <label className="flex items-center gap-2 cursor-pointer group">
                   <input type="checkbox" checked={oddMode} onChange={e => { setOddMode(e.target.checked); if (e.target.checked) setEvenMode(false); }} className="w-3.5 h-3.5 rounded text-[#f59e0b] focus:ring-[#f59e0b]" />
@@ -624,7 +655,7 @@ export default function LuckyGenerator() {
             </div>
           )}
 
-          {activeCategory.mode === 'box' && !activeCategory.id.includes('digit') && activeCategory.id !== 'board' && (
+          {activeCategory.mode === 'box' && activeCategory.id !== 'board' && (
             <div className={`w-full ${activeCategory.id === 'all-possible' ? 'grid grid-cols-2 gap-4' : 'space-y-4'}`}>
               <div className="flex flex-col items-center">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 text-center">{activeCategory.id === 'all-possible' ? 'Base Numbers' : 'Enter Number'}</label>
@@ -688,9 +719,9 @@ export default function LuckyGenerator() {
                 {(activeCategory.mode === 'box' || activeCategory.mode === 'digit-random' || activeCategory.mode === 'previous-result') && results[0]?.box && (
                   <div className="space-y-4">
                     <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 pb-2">
-                       {(activeCategory.mode === 'digit-random' || activeCategory.mode === 'previous-result') ? 'Generated' : 'Found'} {results[0].box.length} {(activeCategory.mode === 'digit-random' || activeCategory.mode === 'previous-result') ? 'Numbers' : 'Combinations'}
+                      {(activeCategory.mode === 'digit-random' || activeCategory.mode === 'previous-result') ? 'Generated' : 'Found'} {results[0].box.length} {(activeCategory.mode === 'digit-random' || activeCategory.mode === 'previous-result') ? 'Numbers' : 'Combinations'}
                     </div>
-                    <div 
+                    <div
                       className="w-full grid gap-1.5"
                       style={{ gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' }}
                     >

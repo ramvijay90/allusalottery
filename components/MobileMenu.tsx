@@ -23,7 +23,7 @@ export default function MobileMenu() {
   };
 
   return (
-    <div className="flex md:hidden items-center ">
+    <div className="flex md:hidden items-center">
       <button 
         onClick={toggleMenu}
         className="text-[#0f172a] p-2 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none relative z-50"

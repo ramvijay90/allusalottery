@@ -100,7 +100,7 @@ export default function RootLayout({
             </nav>
 
             <div className="flex items-center gap-4">
-              <Link href="/#states" className="hidden md:block bg-[#0f172a] hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all text-center  ">
+              <Link href="/#states" className="hidden md:block bg-[#0f172a] hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-slate-900/20 active:scale-95 transition-all text-center">
                 Check Results
               </Link>
               <MobileMenu />
