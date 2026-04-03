@@ -561,41 +561,44 @@ export default function LuckyGenerator() {
 
               {activeCategory.id === 'board' && (
                 <div className="w-full space-y-4 py-2">
-                  <div className="w-full flex flex-col items-center">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 text-center">Select Board</label>
-                    <div className="relative w-full">
-                      <select
-                        value={activeBoardTab}
-                        onChange={(e) => setActiveBoardTab(e.target.value)}
-                        className="w-full bg-white border-2 border-slate-100 rounded-2xl py-2 px-4 font-black text-sm text-center shadow-sm focus:outline-none appearance-none cursor-pointer pr-10"
-                      >
-                        {Object.keys(boards).sort().map(key => (
-                          <option key={key} value={key}>Board {key}</option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                        <ChevronDown size={16} className="text-slate-400" />
+                  {Object.keys(boards).sort().map((boardKey) => (
+                    <div key={boardKey} className="w-full bg-white border border-slate-100 rounded-[2rem] p-4 sm:p-6 flex flex-col items-center shadow-sm">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Board {boardKey}</span>
+                      
+                      <div className="flex flex-col items-center gap-1.5 w-full">
+                        {/* Row 1: 0-5 */}
+                        <div className="flex justify-center gap-1.5 w-full">
+                          {['0', '1', '2', '3', '4', '5'].map(num => (
+                            <button
+                              key={num}
+                              onClick={() => toggleDigit(boardKey, num)}
+                              className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black text-xs sm:text-base transition-all border-2 ${boards[boardKey]?.includes(num)
+                                ? 'bg-[#f59e0b] border-amber-500 text-white shadow-md'
+                                : 'bg-white border-slate-50 text-slate-300 hover:border-slate-200'
+                              }`}
+                            >
+                              {num}
+                            </button>
+                          ))}
+                        </div>
+                        {/* Row 2: 6-9 */}
+                        <div className="flex justify-center gap-1.5 w-full">
+                          {['6', '7', '8', '9'].map(num => (
+                            <button
+                              key={num}
+                              onClick={() => toggleDigit(boardKey, num)}
+                              className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black text-xs sm:text-base transition-all border-2 ${boards[boardKey]?.includes(num)
+                                ? 'bg-[#f59e0b] border-amber-500 text-white shadow-md'
+                                : 'bg-white border-slate-50 text-slate-300 hover:border-slate-200'
+                              }`}
+                            >
+                              {num}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="w-full flex flex-col items-center">
-                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 text-center">Choose a Number (0 - 9)</label>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
-                        <button
-                          key={num}
-                          onClick={() => toggleDigit(activeBoardTab, num)}
-                          className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-base transition-all border-2 ${boards[activeBoardTab]?.includes(num)
-                            ? 'bg-[#f59e0b] border-amber-500 text-white shadow-md'
-                            : 'bg-white border-slate-50 text-slate-300 hover:border-slate-200'
-                            }`}
-                        >
-                          {num}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               )}
 
@@ -734,30 +737,45 @@ export default function LuckyGenerator() {
           )}
 
           {activeCategory.mode === 'box' && activeCategory.id !== 'all-possible' && activeCategory.id !== 'board' && (
-            <div className="w-full space-y-6">
-              <div className="space-y-4">
-                {Object.keys(boards).map((boardKey) => (
-                  <div key={boardKey} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 p-4 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-                    <div className="min-w-[80px] text-center sm:text-left">
-                      <span className="text-xs font-black text-[#0f172a] uppercase tracking-wider">Board {boardKey}</span>
-                    </div>
-                    <div className="flex flex-wrap justify-center sm:justify-start gap-1.5 flex-1">
-                      {['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
+            <div className="w-full space-y-4">
+              {Object.keys(boards).sort().map((boardKey) => (
+                <div key={boardKey} className="w-full bg-white border border-slate-100 rounded-[2rem] p-4 sm:p-6 flex flex-col items-center shadow-sm">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Board {boardKey}</span>
+                  
+                  <div className="flex flex-col items-center gap-1.5 w-full">
+                    {/* Row 1: 0-5 */}
+                    <div className="flex justify-center gap-1.5 w-full">
+                      {['0', '1', '2', '3', '4', '5'].map(num => (
                         <button
                           key={num}
                           onClick={() => toggleDigit(boardKey, num)}
-                          className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl text-sm sm:text-lg font-black transition-all border ${boards[boardKey]?.includes(num)
-                            ? 'bg-[#f59e0b] border-amber-600 text-[#0f172a] shadow-sm scale-110 ring-2 ring-amber-200'
-                            : 'bg-slate-50 border-slate-100 text-slate-400 hover:border-[#f59e0b]/50 hover:text-[#f59e0b] hover:scale-105'
-                            }`}
+                          className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black text-xs sm:text-base transition-all border-2 ${boards[boardKey]?.includes(num)
+                            ? 'bg-[#f59e0b] border-amber-500 text-white shadow-md'
+                            : 'bg-white border-slate-50 text-slate-300 hover:border-slate-200'
+                          }`}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Row 2: 6-9 */}
+                    <div className="flex justify-center gap-1.5 w-full">
+                      {['6', '7', '8', '9'].map(num => (
+                        <button
+                          key={num}
+                          onClick={() => toggleDigit(boardKey, num)}
+                          className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black text-xs sm:text-base transition-all border-2 ${boards[boardKey]?.includes(num)
+                            ? 'bg-[#f59e0b] border-amber-500 text-white shadow-md'
+                            : 'bg-white border-slate-50 text-slate-300 hover:border-slate-200'
+                          }`}
                         >
                           {num}
                         </button>
                       ))}
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           )}
 
