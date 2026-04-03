@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CATEGORIES, LotteryCategory } from '@/lib/lotteryCategories';
-import { RefreshCw, Copy, Trash2, Wand2, Share2, Facebook, Send, MessageCircle } from 'lucide-react';
+import { RefreshCw, Copy, Trash2, Wand2, Share2, Facebook, Send, MessageCircle, ChevronDown } from 'lucide-react';
 
 export default function LuckyGenerator() {
   const [activeCategory, setActiveCategory] = useState<LotteryCategory>(CATEGORIES[0]);
@@ -563,15 +563,20 @@ export default function LuckyGenerator() {
                 <div className="w-full space-y-4 py-2">
                   <div className="w-full flex flex-col items-center">
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 text-center">Select Board</label>
-                    <select
-                      value={activeBoardTab}
-                      onChange={(e) => setActiveBoardTab(e.target.value)}
-                      className="w-full bg-white border-2 border-slate-100 rounded-2xl py-2 px-4 font-black text-sm text-center shadow-sm focus:outline-none appearance-none cursor-pointer"
-                    >
-                      {Object.keys(boards).sort().map(key => (
-                        <option key={key} value={key}>Board {key}</option>
-                      ))}
-                    </select>
+                    <div className="relative w-full">
+                      <select
+                        value={activeBoardTab}
+                        onChange={(e) => setActiveBoardTab(e.target.value)}
+                        className="w-full bg-white border-2 border-slate-100 rounded-2xl py-2 px-4 font-black text-sm text-center shadow-sm focus:outline-none appearance-none cursor-pointer pr-10"
+                      >
+                        {Object.keys(boards).sort().map(key => (
+                          <option key={key} value={key}>Board {key}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                        <ChevronDown size={16} className="text-slate-400" />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="w-full flex flex-col items-center">
