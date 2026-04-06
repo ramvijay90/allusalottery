@@ -29,6 +29,7 @@ export default function LuckyGenerator() {
   const [results, setResults] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Board Strategy State
   const [boards, setBoards] = useState<Record<string, string[]>>({});
