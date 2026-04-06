@@ -27,7 +27,7 @@ export default function LuckyGenerator() {
 
   // Results State
   const [results, setResults] = useState<any[]>([]);
-  const [copied, setCopied] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
 
   // Board Strategy State
@@ -403,13 +403,20 @@ export default function LuckyGenerator() {
   };
 
   const generate = () => {
-    if (activeCategory.mode === 'digit-random') generateDigitRandomLines();
-    else if (activeCategory.mode === 'number-random') generateNumberRandomLines();
-    else if (activeCategory.mode === 'previous-result') generatePreviousResultLines();
-    else if (activeCategory.mode === 'box') generateBoardLines();
-    else generateStandardLines();
-    setCopied(false);
-    setShowShareOptions(false);
+    setIsGenerating(true);
+    setResults([]); // Clear results immediately to show something changed
+    
+    setTimeout(() => {
+      if (activeCategory.mode === 'digit-random') generateDigitRandomLines();
+      else if (activeCategory.mode === 'number-random') generateNumberRandomLines();
+      else if (activeCategory.mode === 'previous-result') generatePreviousResultLines();
+      else if (activeCategory.mode === 'box') generateBoardLines();
+      else generateStandardLines();
+      
+      setCopied(false);
+      setShowShareOptions(false);
+      setIsGenerating(false);
+    }, 800);
   };
 
   const getFormattedResults = () => {
@@ -736,19 +743,19 @@ export default function LuckyGenerator() {
           {activeCategory.mode === 'box' && activeCategory.id !== 'all-possible' && activeCategory.id !== 'board' && (
             <div className="w-full space-y-4">
               {Object.keys(boards).sort().map((boardKey) => (
-                <div key={boardKey} className="w-full bg-white border border-slate-100 rounded-[2rem] p-4 sm:p-6 flex flex-col items-center shadow-sm">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Board {boardKey}</span>
+                <div key={boardKey} className="w-full bg-white border border-slate-100 rounded-[2.5rem] p-6 flex flex-col items-center shadow-sm">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Board {boardKey}</span>
                   
-                  <div className="flex flex-col items-center gap-1.5 w-full">
+                  <div className="flex flex-col items-center gap-4 w-full">
                     {/* Row 1: 0-5 */}
-                    <div className="flex justify-center gap-1.5 w-full">
+                    <div className="flex justify-center gap-2 w-full">
                       {['0', '1', '2', '3', '4', '5'].map(num => (
                         <button
                           key={num}
                           onClick={() => toggleDigit(boardKey, num)}
-                          className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black text-xs sm:text-base transition-all border-2 ${boards[boardKey]?.includes(num)
-                            ? 'bg-[#f59e0b] border-amber-500 text-white shadow-md'
-                            : 'bg-white border-slate-50 text-slate-300 hover:border-slate-200'
+                          className={`w-6 h-14 sm:w-8 sm:h-16 rounded-full flex items-center justify-center font-black text-sm sm:text-lg transition-all border-2 ${boards[boardKey]?.includes(num)
+                            ? 'bg-[#f59e0b] border-[#f59e0b] text-white shadow-lg shadow-[#f59e0b]/30'
+                            : 'bg-white border-slate-100/50 text-slate-300 hover:border-slate-200'
                           }`}
                         >
                           {num}
@@ -756,14 +763,14 @@ export default function LuckyGenerator() {
                       ))}
                     </div>
                     {/* Row 2: 6-9 */}
-                    <div className="flex justify-center gap-1.5 w-full">
+                    <div className="flex justify-center gap-2 w-full">
                       {['6', '7', '8', '9'].map(num => (
                         <button
                           key={num}
                           onClick={() => toggleDigit(boardKey, num)}
-                          className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center font-black text-xs sm:text-base transition-all border-2 ${boards[boardKey]?.includes(num)
-                            ? 'bg-[#f59e0b] border-amber-500 text-white shadow-md'
-                            : 'bg-white border-slate-50 text-slate-300 hover:border-slate-200'
+                          className={`w-6 h-14 sm:w-8 sm:h-16 rounded-full flex items-center justify-center font-black text-sm sm:text-lg transition-all border-2 ${boards[boardKey]?.includes(num)
+                            ? 'bg-[#f59e0b] border-[#f59e0b] text-white shadow-lg shadow-[#f59e0b]/30'
+                            : 'bg-white border-slate-100/50 text-slate-300 hover:border-slate-200'
                           }`}
                         >
                           {num}
@@ -806,9 +813,10 @@ export default function LuckyGenerator() {
           <div className="w-full flex justify-center pt-4">
             <button
               onClick={generate}
-              className="bg-[#f59e0b] hover:bg-amber-500 text-[#0f172a] font-black py-3.5 px-12 rounded-full shadow-xl shadow-amber-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3 text-xs uppercase tracking-[0.2em]"
+              disabled={isGenerating}
+              className={`w-full bg-[#f59e0b] hover:bg-[#d97706] text-[#0f172a] font-black py-4 rounded-2xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3 uppercase tracking-[0.2em] transform hover:-translate-y-0.5 border-b-4 border-amber-700 ${isGenerating ? 'opacity-80 cursor-not-allowed' : ''}`}
             >
-              <RefreshCw size={14} className="" /> {activeCategory.id === 'all-possible' ? 'GENERATE BOX' : 'GENERATE'}
+              <RefreshCw size={14} className={isGenerating ? 'animate-spin' : ''} /> {isGenerating ? 'Generating...' : (activeCategory.id === 'all-possible' ? 'GENERATE BOX' : 'GENERATE')}
             </button>
           </div>
         </div>

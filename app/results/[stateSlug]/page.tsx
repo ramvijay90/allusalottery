@@ -11,7 +11,8 @@ import SidebarAd from '@/components/ads/SidebarAd';
 import InFeedAd from '@/components/ads/InFeedAd';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
 
-export const revalidate = 60; // ISR: Update every minute
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 async function getStateData(slug: string) {
     try {

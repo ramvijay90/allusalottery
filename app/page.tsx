@@ -86,7 +86,8 @@ async function getTopJackpots() {
   }
 }
 
-export const revalidate = 60; // Revalidate every minute
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ country?: string }> }) {
   const { country } = await searchParams;

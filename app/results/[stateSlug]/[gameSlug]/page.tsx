@@ -11,7 +11,8 @@ import SidebarAd from '@/components/ads/SidebarAd';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
 import AfterContentAd from '@/components/ads/AfterContentAd';
 
-export const revalidate = 60; // ISR
+export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 async function getGameData(stateSlug: string, gameSlug: string) {
     await connectToDatabase();
