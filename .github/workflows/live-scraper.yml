@@ -2,8 +2,8 @@ name: Live Results Scraper
 
 on:
   schedule:
-    # Run every 15 minutes
-    - cron: '*/15 * * * *'
+    # Run every 12 hours to stay strictly below the 2000 minute monthly limit
+    - cron: '0 */12 * * *'
   workflow_dispatch:
 
 jobs:
