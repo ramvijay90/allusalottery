@@ -74,7 +74,9 @@ async function parseAndSaveGames(html: string, stateSlug: string) {
                 // Usually the second time tag (or the last one before numbers) is the actual past drawing date
                 dateStr = timeTags.last().attr('datetime'); 
             }
-            const lastDrawDate = dateStr ? new Date(dateStr) : new Date();
+            // Strip the timezone offset and forcefully set it to 12:00 PM UTC to heavily prevent timezone shifting rendering issues globally.
+            const safeDateStr = dateStr ? `${dateStr.substring(0, 10)}T12:00:00Z` : null;
+            const lastDrawDate = safeDateStr ? new Date(safeDateStr) : new Date();
 
             // Numbers
             const numbers: string[] = [];

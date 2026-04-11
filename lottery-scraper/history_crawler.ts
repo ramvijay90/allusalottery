@@ -59,9 +59,10 @@ async function parseAndSaveHistory(html: string, gameId: string) {
         }
 
         if (dateStr && numbers.length > 0) {
+            const safeDateStr = `${dateStr.substring(0, 10)}T12:00:00Z`;
             resultsToSave.push({
                 gameId,
-                date: new Date(dateStr),
+                date: new Date(safeDateStr),
                 numbers,
                 jackpot
             });
