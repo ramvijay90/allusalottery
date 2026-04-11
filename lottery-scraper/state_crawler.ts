@@ -67,7 +67,13 @@ async function parseAndSaveGames(html: string, stateSlug: string) {
             const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 
             // Date
-            const dateStr = drawBlock.find('time').attr('datetime');
+            // LotteryPost often puts the "Next Draw Date" as the first <time> tag. We want the latest past draw date.
+            const timeTags = drawBlock.find('time');
+            let dateStr = timeTags.first().attr('datetime');
+            if (timeTags.length > 1) {
+                // Usually the second time tag (or the last one before numbers) is the actual past drawing date
+                dateStr = timeTags.last().attr('datetime'); 
+            }
             const lastDrawDate = dateStr ? new Date(dateStr) : new Date();
 
             // Numbers
