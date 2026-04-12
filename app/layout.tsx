@@ -81,6 +81,11 @@ export default function RootLayout({
             </Link>
 
             <nav className="hidden md:flex gap-8 text-sm font-bold text-slate-600 uppercase tracking-wide">
+              <Link href="/live-results" className="hover:text-red-600 text-red-500 transition-colors relative group flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                LIVE RESULTS
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all group-hover:w-full"></span>
+              </Link>
               <Link href="/?country=US#states" className="hover:text-[#0f172a] transition-colors relative group">
                 USA
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
