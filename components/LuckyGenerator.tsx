@@ -27,7 +27,7 @@ export default function LuckyGenerator() {
 
   // Results State
   const [results, setResults] = useState<any[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -404,20 +404,14 @@ export default function LuckyGenerator() {
   };
 
   const generate = () => {
-    setIsGenerating(true);
-    setResults([]); // Clear results immediately to show something changed
+    if (activeCategory.mode === 'digit-random') generateDigitRandomLines();
+    else if (activeCategory.mode === 'number-random') generateNumberRandomLines();
+    else if (activeCategory.mode === 'previous-result') generatePreviousResultLines();
+    else if (activeCategory.mode === 'box') generateBoardLines();
+    else generateStandardLines();
     
-    setTimeout(() => {
-      if (activeCategory.mode === 'digit-random') generateDigitRandomLines();
-      else if (activeCategory.mode === 'number-random') generateNumberRandomLines();
-      else if (activeCategory.mode === 'previous-result') generatePreviousResultLines();
-      else if (activeCategory.mode === 'box') generateBoardLines();
-      else generateStandardLines();
-      
-      setCopied(false);
-      setShowShareOptions(false);
-      setIsGenerating(false);
-    }, 800);
+    setCopied(false);
+    setShowShareOptions(false);
   };
 
   const getFormattedResults = () => {
@@ -814,10 +808,9 @@ export default function LuckyGenerator() {
           <div className="w-full flex justify-center pt-4">
             <button
               onClick={generate}
-              disabled={isGenerating}
-              className={`w-full bg-[#f59e0b] hover:bg-[#d97706] text-[#0f172a] font-black py-4 rounded-2xl shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-3 uppercase tracking-[0.2em] transform hover:-translate-y-0.5 border-b-4 border-amber-700 ${isGenerating ? 'opacity-80 cursor-not-allowed' : ''}`}
+              className="bg-[#f59e0b] hover:bg-amber-500 text-[#0f172a] font-black py-3.5 px-12 rounded-full shadow-xl shadow-amber-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3 text-xs uppercase tracking-[0.2em]"
             >
-              <RefreshCw size={14} className={isGenerating ? 'animate-spin' : ''} /> {isGenerating ? 'Generating...' : (activeCategory.id === 'all-possible' ? 'GENERATE BOX' : 'GENERATE')}
+              <RefreshCw size={14} className="" /> {activeCategory.id === 'all-possible' ? 'GENERATE BOX' : 'GENERATE'}
             </button>
           </div>
         </div>
