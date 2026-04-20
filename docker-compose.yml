@@ -10,9 +10,25 @@ services:
     environment:
       - MONGODB_URI=${MONGODB_URI}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - REVALIDATE_SECRET=${REVALIDATE_SECRET}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
       - NODE_ENV=production
     volumes:
       - ./.next:/app/.next
+    depends_on:
+      - mongo
+
+  scheduler:
+    build: .
+    container_name: usa-lotto-scheduler
+    restart: always
+    environment:
+      - MONGODB_URI=${MONGODB_URI}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - REVALIDATE_SECRET=${REVALIDATE_SECRET}
+      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
+      - NODE_ENV=production
+    command: npm run start:scheduler
     depends_on:
       - mongo
 

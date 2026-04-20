@@ -29,24 +29,36 @@ function runScript(scriptName: string, args: string[] = []): Promise<void> {
     });
 }
 
+let isBatchRunning = false;
+
 async function runAllStates() {
-    console.log('🔄 Starting Batch: Run All States...');
-    await connectToDatabase();
-
-    // Get all states
-    const states = await State.find({}).sort({ name: 1 });
-    console.log(`Found ${states.length} states to update.`);
-
-    // Run sequentially to avoid overwhelming cpu/network/db
-    for (const state of states) {
-        console.log(`\nProcessing ${state.name} (${state.slug})...`);
-        await runScript('state_crawler.ts', [state.slug]);
-
-        // Small delay between states
-        await new Promise(r => setTimeout(r, 2000));
+    if (isBatchRunning) {
+        console.log('⚠️ Skip: Previous batch is still running.');
+        return;
     }
+    isBatchRunning = true;
+    
+    try {
+        console.log('🔄 Starting Batch: Run All States...');
+        await connectToDatabase();
 
-    console.log('\n✨ Batch Complete: All states updated.');
+        // Get all states
+        const states = await State.find({}).sort({ name: 1 });
+        console.log(`Found ${states.length} states to update.`);
+
+        // Run sequentially to avoid overwhelming cpu/network/db
+        for (const state of states) {
+            console.log(`\nProcessing ${state.name} (${state.slug})...`);
+            await runScript('state_crawler.ts', [state.slug]);
+
+            // Small delay between states
+            await new Promise(r => setTimeout(r, 2000));
+        }
+
+        console.log('\n✨ Batch Complete: All states updated.');
+    } finally {
+        isBatchRunning = false;
+    }
 }
 
 async function startScheduler() {
