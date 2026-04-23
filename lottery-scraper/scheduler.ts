@@ -79,8 +79,8 @@ async function startScheduler() {
         await runScript('history_batch_runner.ts');
     });
 
-    // 3. All States Live Results - Every 10 minutes
-    cron.schedule('*/10 * * * *', async () => {
+    // 3. All States Live Results - Every 15 minutes
+    cron.schedule('*/15 * * * *', async () => {
         console.log('⏰ Cron Trigger: Live Results Batch');
         await runAllStates();
     });

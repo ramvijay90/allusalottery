@@ -95,8 +95,14 @@ async function parseAndSaveGames(html: string, stateSlug: string) {
             const jackpot = drawBlock.find('.resultsJackpotAmount span span').text().trim();
             const nextDrawText = drawBlock.find('.resultsNextDrawInfo .resultsnextdate').text().trim();
 
-            // Parse Next Draw Date (simplistic)
+            // Parse Next Draw Date
             let nextDrawDate = new Date(); 
+            if (nextDrawText) {
+                const parsed = new Date(nextDrawText);
+                if (!isNaN(parsed.getTime())) {
+                    nextDrawDate = parsed;
+                }
+            }
 
             gamesToSave.push({
                 name,
@@ -122,7 +128,7 @@ async function parseAndSaveGames(html: string, stateSlug: string) {
         const updatedGame = await Game.findOneAndUpdate(
             { stateSlug: game.stateSlug, slug: game.slug },
             game,
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: 'after' }
         );
 
         // SYNC result to Results History Collection
@@ -136,7 +142,7 @@ async function parseAndSaveGames(html: string, stateSlug: string) {
                     jackpot: game.jackpot,
                     powerBall: game.powerBall
                 },
-                { upsert: true }
+                { upsert: true, returnDocument: 'after' }
             );
         }
     }
