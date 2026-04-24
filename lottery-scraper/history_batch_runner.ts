@@ -11,7 +11,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.production') });
 
 function runScript(stateSlug: string, gameSlug: string, year: number | null): Promise<void> {
     return new Promise((resolve, reject) => {
-        let cmd = `npx tsx lottery-scraper/history_crawler.ts ${stateSlug} ${gameSlug}`;
+        let cmd = `npx --yes tsx lottery-scraper/history_crawler.ts ${stateSlug} ${gameSlug}`;
         if (year) {
             cmd += ` --year=${year}`;
         }

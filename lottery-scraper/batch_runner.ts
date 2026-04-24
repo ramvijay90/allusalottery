@@ -10,7 +10,7 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 function runScript(scriptName: string, args: string[] = []): Promise<void> {
     return new Promise((resolve, reject) => {
-        const cmd = `npx tsx lottery-scraper/${scriptName} ${args.join(' ')}`;
+        const cmd = `npx --yes tsx lottery-scraper/${scriptName} ${args.join(' ')}`;
         console.log(`\n🚀 Executing: ${cmd}`);
 
         exec(cmd, { cwd: process.cwd() }, (error, stdout, stderr) => {
