@@ -15,7 +15,7 @@ function runScript(scriptName: string, args: string[] = []): Promise<void> {
         const cmd = `npx --yes tsx lottery-scraper/${scriptName} ${args.join(' ')}`;
         console.log(`\n🚀 Schedular Running: ${cmd}`);
 
-        exec(cmd, { cwd: process.cwd() }, (error, stdout, stderr) => {
+        exec(cmd, { cwd: process.cwd(), timeout: 120000 }, (error, stdout, stderr) => {
             if (error) {
                 console.error(`❌ Error running ${scriptName}:`, error);
                 // Don't reject, just log, so other tasks continue

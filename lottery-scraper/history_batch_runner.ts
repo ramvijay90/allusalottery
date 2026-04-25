@@ -18,7 +18,7 @@ function runScript(stateSlug: string, gameSlug: string, year: number | null): Pr
 
         console.log(`\n🚀 Executing: ${cmd}`);
 
-        exec(cmd, { cwd: process.cwd() }, (error, stdout, stderr) => {
+        exec(cmd, { cwd: process.cwd(), timeout: 120000 }, (error, stdout, stderr) => {
             if (error) {
                 console.error(`❌ Error running history for ${stateSlug}/${gameSlug}:`, error.message);
                 resolve();
