@@ -5,11 +5,15 @@ import { useEffect, useRef } from 'react';
 export default function AfterContentAd() {
   const adRef = useRef<HTMLModElement>(null);
 
+  const adPushed = useRef(false);
+
   useEffect(() => {
+    if (adPushed.current) return;
     try {
       if (adRef.current && !adRef.current.hasAttribute('data-adsbygoogle-status')) {
         // @ts-ignore
         (window.adsbygoogle = window.adsbygoogle || []).push({});
+        adPushed.current = true;
       }
     } catch (err) {
       console.error('AfterContent AdSense Error:', err);
