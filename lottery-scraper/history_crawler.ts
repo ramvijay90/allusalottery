@@ -8,7 +8,7 @@ async function fetchHistoryPage(url: string) {
     console.log(`Launching browser for history: ${url}...`);
     const browser = await puppeteer.launch({
         headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process']
     });
 
     try {

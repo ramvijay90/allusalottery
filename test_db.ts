@@ -2,7 +2,14 @@ import connectToDatabase from './lib/db';
 import Game from './models/Game';
 
 connectToDatabase().then(async () => {
-    const g = await Game.findOne({ slug: 'triple-twist' });
-    console.log(JSON.stringify(g, null, 2));
+    const states = ['az', 'ar', 'ca', 'ny', 'tx'];
+    for (const st of states) {
+        const g = await Game.findOne({ stateSlug: st });
+        if (g) {
+            console.log(`[${st}] ${g.name} - Last Draw: ${g.lastDrawDate} - UpdatedAt: ${g.updatedAt}`);
+        } else {
+            console.log(`[${st}] No games found`);
+        }
+    }
     process.exit();
 });
