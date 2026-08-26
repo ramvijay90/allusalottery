@@ -22,7 +22,7 @@ jobs:
 
       - name: Run Scraper Batch
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
           SCRAPER_PROXY: ${{ secrets.SCRAPER_PROXY }}
           SCRAPER_PROXY_USERNAME: ${{ secrets.SCRAPER_PROXY_USERNAME }}
           SCRAPER_PROXY_PASSWORD: ${{ secrets.SCRAPER_PROXY_PASSWORD }}
