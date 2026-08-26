@@ -4,21 +4,73 @@ import State from '../models/State';
 
 async function fetchHubPage() {
     console.log('Launching browser...');
+    const launchArgs = [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox', 
+        '--disable-dev-shm-usage', 
+        '--single-process'
+    ];
+
+    const proxy = process.env.SCRAPER_PROXY;
+    if (proxy) {
+        console.log(`Using Proxy: ${proxy}`);
+        launchArgs.push(`--proxy-server=${proxy}`);
+    }
+
+    const cliArgs = process.argv.slice(2);
+    const showBrowser = cliArgs.includes('--show');
+
     const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process']
+        headless: !showBrowser,
+        args: launchArgs
     });
 
     try {
         const page = await browser.newPage();
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-        console.log('Navigating to LotteryPost Results Hub...');
-        // Wait for DOM content (faster than networkidle2)
-        await page.goto('https://www.lotterypost.com/results', { waitUntil: 'domcontentloaded', timeout: 90000 });
+        if (proxy && process.env.SCRAPER_PROXY_USERNAME && process.env.SCRAPER_PROXY_PASSWORD) {
+            console.log('Authenticating Proxy...');
+            await page.authenticate({
+                username: process.env.SCRAPER_PROXY_USERNAME,
+                password: process.env.SCRAPER_PROXY_PASSWORD
+            });
+        }
 
-        // Explicit wait to ensure Cloudflare challenge clears
-        await new Promise(r => setTimeout(r, 10000));
+        console.log('Navigating to LotteryPost Results Hub...');
+        try {
+            await page.goto('https://www.lotterypost.com/results', { waitUntil: 'load', timeout: 90000 });
+        } catch (err: any) {
+            console.log('Navigation event finished (possible Cloudflare challenge page redirect).');
+        }
+
+        console.log('Waiting for results content to load (bypassing Cloudflare)...');
+        const startTime = Date.now();
+        const timeoutMs = 60000;
+        let selectorFound = false;
+
+        while (Date.now() - startTime < timeoutMs) {
+            try {
+                await page.waitForSelector('.linkgrid', { timeout: 2000 });
+                selectorFound = true;
+                break;
+            } catch (err: any) {
+                if (err.message.includes('detached') || err.message.includes('Session closed') || err.message.includes('Execution context')) {
+                    console.log('[Selector Safe] Frame changed/detached. Retrying for .linkgrid...');
+                    await new Promise(r => setTimeout(r, 2000));
+                    continue;
+                }
+                // Short wait before retry
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
+
+        if (!selectorFound) {
+            throw new Error('Timeout waiting for .linkgrid to render.');
+        }
+
+        // Short sleep for final render
+        await new Promise(r => setTimeout(r, 3000));
 
         const content = await page.content();
         await browser.close();

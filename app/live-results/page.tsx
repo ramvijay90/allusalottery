@@ -10,6 +10,62 @@ import SidebarAd from '@/components/ads/SidebarAd';
 import InFeedAd from '@/components/ads/InFeedAd';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
 
+const STATE_ABBREVIATIONS: { [key: string]: string } = {
+  arizona: 'AZ',
+  arkansas: 'AR',
+  california: 'CA',
+  colorado: 'CO',
+  connecticut: 'CT',
+  delaware: 'DE',
+  dc: 'DC',
+  florida: 'FL',
+  georgia: 'GA',
+  idaho: 'ID',
+  illinois: 'IL',
+  indiana: 'IN',
+  iowa: 'IA',
+  kansas: 'KS',
+  kentucky: 'KY',
+  louisiana: 'LA',
+  maine: 'ME',
+  maryland: 'MD',
+  massachusetts: 'MA',
+  michigan: 'MI',
+  minnesota: 'MN',
+  mississippi: 'MS',
+  missouri: 'MO',
+  montana: 'MT',
+  nebraska: 'NE',
+  newhampshire: 'NH',
+  newjersey: 'NJ',
+  newmexico: 'NM',
+  newyork: 'NY',
+  northcarolina: 'NC',
+  northdakota: 'ND',
+  ohio: 'OH',
+  oklahoma: 'OK',
+  oregon: 'OR',
+  pennsylvania: 'PA',
+  puertorico: 'PR',
+  rhodeisland: 'RI',
+  southcarolina: 'SC',
+  southdakota: 'SD',
+  tennessee: 'TN',
+  texas: 'TX',
+  virginislands: 'VI',
+  vermont: 'VT',
+  virginia: 'VA',
+  washington: 'WA',
+  westvirginia: 'WV',
+  wisconsin: 'WI',
+  wyoming: 'WY',
+  atlantic: 'ATL',
+  bc: 'BC',
+  ontario: 'ON',
+  quebec: 'QC',
+  western: 'WES'
+};
+
 // Force absolute dynamic rendering for live tracking
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -98,6 +154,7 @@ export default async function LiveResultsPage() {
                 <div className="grid gap-6">
                     {games.map((game: any, index: number) => {
                         const stateName = stateMap[game.stateSlug] || game.stateSlug.toUpperCase();
+                        const abbr = STATE_ABBREVIATIONS[game.stateSlug] || game.stateSlug.substring(0, 2).toUpperCase();
                         
                         return (
                         <React.Fragment key={game._id}>
@@ -105,8 +162,8 @@ export default async function LiveResultsPage() {
                             <div className="bg-white rounded-[24px] border border-slate-100 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all p-6 group">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6 border-b border-dashed border-slate-100 pb-6">
                                     <div className="flex items-center gap-5">
-                                        <Link href={`/results/${game.stateSlug}`} className="flex-shrink-0 w-16 h-16 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-lg font-black text-[#0f172a] shadow-inner hover:bg-[#0f172a] hover:text-white transition-colors">
-                                            {game.stateSlug.toUpperCase()}
+                                        <Link href={`/results/${game.stateSlug}`} className="flex-shrink-0 w-16 h-16 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-sm font-black text-[#0f172a] shadow-inner hover:bg-[#0f172a] hover:text-white transition-colors">
+                                            {abbr}
                                         </Link>
                                         <div>
                                             <h2 className="text-2xl font-black text-[#0f172a] tracking-tight group-hover:text-red-600 transition-colors">

@@ -4,6 +4,62 @@ import connectToDatabase from '@/lib/db';
 import State from '@/models/State';
 import Game from '@/models/Game';
 
+const STATE_ABBREVIATIONS: { [key: string]: string } = {
+  arizona: 'AZ',
+  arkansas: 'AR',
+  california: 'CA',
+  colorado: 'CO',
+  connecticut: 'CT',
+  delaware: 'DE',
+  dc: 'DC',
+  florida: 'FL',
+  georgia: 'GA',
+  idaho: 'ID',
+  illinois: 'IL',
+  indiana: 'IN',
+  iowa: 'IA',
+  kansas: 'KS',
+  kentucky: 'KY',
+  louisiana: 'LA',
+  maine: 'ME',
+  maryland: 'MD',
+  massachusetts: 'MA',
+  michigan: 'MI',
+  minnesota: 'MN',
+  mississippi: 'MS',
+  missouri: 'MO',
+  montana: 'MT',
+  nebraska: 'NE',
+  newhampshire: 'NH',
+  newjersey: 'NJ',
+  newmexico: 'NM',
+  newyork: 'NY',
+  northcarolina: 'NC',
+  northdakota: 'ND',
+  ohio: 'OH',
+  oklahoma: 'OK',
+  oregon: 'OR',
+  pennsylvania: 'PA',
+  puertorico: 'PR',
+  rhodeisland: 'RI',
+  southcarolina: 'SC',
+  southdakota: 'SD',
+  tennessee: 'TN',
+  texas: 'TX',
+  virginislands: 'VI',
+  vermont: 'VT',
+  virginia: 'VA',
+  washington: 'WA',
+  westvirginia: 'WV',
+  wisconsin: 'WI',
+  wyoming: 'WY',
+  atlantic: 'ATL',
+  bc: 'BC',
+  ontario: 'ON',
+  quebec: 'QC',
+  western: 'WES'
+};
+
 // Fetch states from DB for the homepage
 async function getStates(country?: string) {
   try {
@@ -180,21 +236,24 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                 <p className="text-sm">Run the scraper to see state results here.</p>
               </div>
             ) : (
-              states.map((state: any) => (
-                <Link
-                  href={`/results/${state.slug}`}
-                  key={state._id}
-                  className="group bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-[#f59e0b]/30 transition-all flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-slate-50 text-[#0f172a] flex items-center justify-center font-black text-xs group-hover:bg-[#0f172a] group-hover:text-[#f59e0b] transition-all shadow-inner">
-                      {state.slug.toUpperCase()}
+              states.map((state: any) => {
+                const abbr = STATE_ABBREVIATIONS[state.slug] || state.slug.substring(0, 2).toUpperCase();
+                return (
+                  <Link
+                    href={`/results/${state.slug}`}
+                    key={state._id}
+                    className="group bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-[#f59e0b]/30 transition-all flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-slate-50 text-[#0f172a] flex items-center justify-center font-black text-sm group-hover:bg-[#0f172a] group-hover:text-[#f59e0b] transition-all shadow-inner">
+                        {abbr}
+                      </div>
+                      <span className="font-bold text-slate-700 group-hover:text-[#0f172a]">{state.name}</span>
                     </div>
-                    <span className="font-bold text-slate-700 group-hover:text-[#0f172a]">{state.name}</span>
-                  </div>
-                  <ArrowRight size={16} className="text-slate-300 group-hover:text-[#f59e0b] group-hover:translate-x-1 transition-all" />
-                </Link>
-              ))
+                    <ArrowRight size={16} className="text-slate-300 group-hover:text-[#f59e0b] group-hover:translate-x-1 transition-all" />
+                  </Link>
+                );
+              })
             )}
           </div>
         </section>

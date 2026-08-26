@@ -11,6 +11,62 @@ import SidebarAd from '@/components/ads/SidebarAd';
 import InFeedAd from '@/components/ads/InFeedAd';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
 
+const STATE_ABBREVIATIONS: { [key: string]: string } = {
+  arizona: 'AZ',
+  arkansas: 'AR',
+  california: 'CA',
+  colorado: 'CO',
+  connecticut: 'CT',
+  delaware: 'DE',
+  dc: 'DC',
+  florida: 'FL',
+  georgia: 'GA',
+  idaho: 'ID',
+  illinois: 'IL',
+  indiana: 'IN',
+  iowa: 'IA',
+  kansas: 'KS',
+  kentucky: 'KY',
+  louisiana: 'LA',
+  maine: 'ME',
+  maryland: 'MD',
+  massachusetts: 'MA',
+  michigan: 'MI',
+  minnesota: 'MN',
+  mississippi: 'MS',
+  missouri: 'MO',
+  montana: 'MT',
+  nebraska: 'NE',
+  newhampshire: 'NH',
+  newjersey: 'NJ',
+  newmexico: 'NM',
+  newyork: 'NY',
+  northcarolina: 'NC',
+  northdakota: 'ND',
+  ohio: 'OH',
+  oklahoma: 'OK',
+  oregon: 'OR',
+  pennsylvania: 'PA',
+  puertorico: 'PR',
+  rhodeisland: 'RI',
+  southcarolina: 'SC',
+  southdakota: 'SD',
+  tennessee: 'TN',
+  texas: 'TX',
+  virginislands: 'VI',
+  vermont: 'VT',
+  virginia: 'VA',
+  washington: 'WA',
+  westvirginia: 'WV',
+  wisconsin: 'WI',
+  wyoming: 'WY',
+  atlantic: 'ATL',
+  bc: 'BC',
+  ontario: 'ON',
+  quebec: 'QC',
+  western: 'WES'
+};
+
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
@@ -88,8 +144,8 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div>
                             <div className="flex items-center gap-3 mb-2">
-                                <span className="w-12 h-12 bg-[#0f172a] text-[#f59e0b] rounded-xl flex items-center justify-center text-lg font-black shadow-lg">
-                                    {state.slug.toUpperCase()}
+                                <span className="w-12 h-12 bg-[#0f172a] text-[#f59e0b] rounded-xl flex items-center justify-center text-sm font-black shadow-lg">
+                                    {STATE_ABBREVIATIONS[state.slug] || state.slug.substring(0, 2).toUpperCase()}
                                 </span>
                                 <h1 className="text-4xl font-black text-[#0f172a] tracking-tighter">
                                     {state.name} <span className="text-slate-400">Lottery</span>

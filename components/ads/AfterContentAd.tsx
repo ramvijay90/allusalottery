@@ -1,14 +1,30 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { isBlocked, setupAICPListener } from '@/lib/aicp';
 
 export default function AfterContentAd() {
   const adRef = useRef<HTMLModElement>(null);
-
   const adPushed = useRef(false);
+  const [blocked, setBlocked] = useState(false);
 
   useEffect(() => {
-    if (adPushed.current) return;
+    setBlocked(isBlocked());
+    const cleanup = setupAICPListener();
+
+    const handleStorageChange = () => {
+      setBlocked(isBlocked());
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      cleanup();
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (blocked || adPushed.current) return;
     try {
       if (adRef.current && !adRef.current.hasAttribute('data-adsbygoogle-status')) {
         // @ts-ignore
@@ -18,7 +34,11 @@ export default function AfterContentAd() {
     } catch (err) {
       console.error('AfterContent AdSense Error:', err);
     }
-  }, []);
+  }, [blocked]);
+
+  if (blocked) {
+    return null;
+  }
 
   return (
     <div className="w-full flex justify-center my-6">
