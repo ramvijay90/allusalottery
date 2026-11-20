@@ -60,26 +60,48 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
     const data = await getGameData(stateSlug, gameSlug);
     if (!data) return { title: 'Game Not Found' };
 
+    const currentYear = new Date().getFullYear();
+    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euro-jackpot'].includes(data.game.slug.toLowerCase());
+    
+    // Top-ranking formula: [High-Volume Primary Keyword] [Year] | [Secondary Intent / Action]
+    const primaryKeyword = isMultiState
+        ? `${data.game.name} Winning Numbers & Results ${currentYear}`
+        : `${data.state.name} ${data.game.name} Results Today ${currentYear}`;
+    
+    const title = `${primaryKeyword} | Live Winning Numbers & History`;
+    const description = `Official ${data.state.name} ${data.game.name} winning numbers for ${currentYear}. Latest drawing results, next jackpot ${data.game.jackpot || 'estimates'}, and past draw history. Check tickets now.`;
+    const canonicalUrl = `https://allusalottery.com/results/${stateSlug}/${gameSlug}`;
+
     return {
-        title: `${data.game.name} Winning Numbers & Results - ${data.state.name} Lottery`,
-        description: `Check the latest ${data.state.name} ${data.game.name} winning numbers, past results, jackpots, and historical data. Next estimated jackpot: ${data.game.jackpot || 'Pending'}!`,
+        title,
+        description,
+        alternates: {
+            canonical: canonicalUrl,
+        },
         keywords: [
-            `${data.game.name} results`, `${data.game.name} winning numbers`, `${data.state.name} lottery`,
-            `${data.state.name} ${data.game.name}`, 'past lottery numbers', 'lottery history', 'tonight\'s winning numbers',
-            'latest lottery draw', `check ${data.game.name} ticket`
+            `${data.game.name} results`,
+            `${data.game.name} winning numbers`,
+            `${data.game.name} ${currentYear}`,
+            `${data.state.name} lottery`,
+            `${data.state.name} ${data.game.name}`,
+            'past lottery numbers',
+            'lottery history 2026',
+            'tonight\'s winning numbers',
+            'latest lottery draw',
+            `check ${data.game.name} ticket`
         ],
         openGraph: {
-            title: `${data.game.name} Winning Numbers - ${data.state.name} Lottery`,
-            description: `Latest winning numbers for ${data.state.name} ${data.game.name}. Next jackpot: ${data.game.jackpot || 'Pending'}.`,
-            url: `https://allusalottery.com/results/${stateSlug}/${gameSlug}`,
+            title,
+            description,
+            url: canonicalUrl,
             images: [{ url: '/og-image.png', width: 1200, height: 630 }],
             type: 'website',
             siteName: 'All USA Lottery',
         },
         twitter: {
             card: 'summary_large_image',
-            title: `${data.game.name} Winning Numbers - ${data.state.name}`,
-            description: `Did you win? Check the latest ${data.state.name} ${data.game.name} results!`,
+            title,
+            description,
             images: ['/og-image.png'],
         }
     };
@@ -95,25 +117,107 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
 
     const { state, game, history } = data;
 
-    // Schema.org JSON-LD
+    const currentYear = new Date().getFullYear();
+    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euro-jackpot'].includes(game.slug.toLowerCase());
+    const pageH1 = isMultiState
+        ? `${game.name} Winning Numbers & Results ${currentYear}`
+        : `${state.name} ${game.name} Winning Numbers Today`;
+
+    // BreadcrumbList JSON-LD Schema
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        'itemListElement': [
+            {
+                '@type': 'ListItem',
+                'position': 1,
+                'name': 'Home',
+                'item': 'https://allusalottery.com'
+            },
+            {
+                '@type': 'ListItem',
+                'position': 2,
+                'name': `${state.name} Lottery`,
+                'item': `https://allusalottery.com/results/${state.slug}`
+            },
+            {
+                '@type': 'ListItem',
+                'position': 3,
+                'name': `${game.name} Results`,
+                'item': `https://allusalottery.com/results/${state.slug}/${game.slug}`
+            }
+        ]
+    };
+
+    // FAQPage JSON-LD Schema for Google Rich Snippets
+    const faqSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': [
+            {
+                '@type': 'Question',
+                'name': `What are today's ${state.name} ${game.name} winning numbers?`,
+                'acceptedAnswer': {
+                    '@type': 'Answer',
+                    'text': `The most recent winning numbers for ${state.name} ${game.name} drawn on ${new Date(game.lastDrawDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} are ${game.numbers.join(', ')}${game.powerBall ? ` with bonus ball ${game.powerBall}` : ''}.`
+                }
+            },
+            {
+                '@type': 'Question',
+                'name': `When is the next ${game.name} drawing?`,
+                'acceptedAnswer': {
+                    '@type': 'Answer',
+                    'text': `The next scheduled drawing date is ${game.nextDrawDate ? new Date(game.nextDrawDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) : 'to be announced'}. Estimated jackpot is ${game.jackpot || 'announced prior to drawing'}.`
+                }
+            },
+            {
+                '@type': 'Question',
+                'name': `How can I check past ${game.name} winning numbers?`,
+                'acceptedAnswer': {
+                    '@type': 'Answer',
+                    'text': `You can view complete 365-day past draw history, winning numbers, and jackpot payouts directly in the results archive table on this page.`
+                }
+            }
+        ]
+    };
+
+    // Schema.org Lottery / Event JSON-LD
     const jsonLd = {
         '@context': 'https://schema.org',
-        '@type': 'Lottery',
-        'name': `${state.name} ${game.name}`,
+        '@type': 'Event',
+        'name': `${state.name} ${game.name} Lottery Drawing`,
+        'startDate': game.lastDrawDate,
+        'eventStatus': 'https://schema.org/EventScheduled',
+        'eventAttendanceMode': 'https://schema.org/OfflineEventAttendanceMode',
         'location': {
             '@type': 'Place',
-            'name': state.name
+            'name': `${state.name} Lottery Official Drawing`,
+            'address': {
+                '@type': 'PostalAddress',
+                'addressRegion': state.name,
+                'addressCountry': 'US'
+            }
         },
+        'description': `Official ${state.name} ${game.name} lottery drawing. Winning numbers: ${game.numbers.join(' ')}${game.powerBall ? ' [' + game.powerBall + ']' : ''}.`,
         'offers': {
             '@type': 'Offer',
             'price': '2.00',
-            'priceCurrency': 'USD'
-        },
-        'lastDrawDate': game.lastDrawDate
+            'priceCurrency': 'USD',
+            'availability': 'https://schema.org/InStock',
+            'url': `https://allusalottery.com/results/${state.slug}/${game.slug}`
+        }
     };
 
     return (
         <div className="flex flex-col lg:flex-row justify-center items-center lg:items-start gap-8 px-4 py-12 w-full mx-auto">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+            />
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -133,8 +237,8 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                     <Link href={`/results/${state.slug}`} className="text-slate-400 hover:text-[#0f172a] text-xs font-bold uppercase tracking-widest mb-4 inline-flex items-center gap-1 transition-colors">
                         <ChevronLeft size={14} className="text-[#f59e0b]" /> ALL {state.name} RESULTS
                     </Link>
-                    <h1 className="text-5xl font-black text-[#0f172a] tracking-tighter mb-4">
-                        {state.name} <span className="text-slate-400">{game.name}</span>
+                    <h1 className="text-4xl md:text-5xl font-black text-[#0f172a] tracking-tighter mb-4">
+                        {pageH1}
                     </h1>
                     <div className="flex flex-wrap items-center gap-6">
                         <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 px-4 py-2 rounded-xl">

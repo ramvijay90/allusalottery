@@ -145,13 +145,75 @@ async function getTopJackpots() {
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
+export const metadata = {
+  title: 'USA Lottery Results Today & Winning Numbers 2026 | All States Live',
+  description: 'Official USA lottery results today, live winning numbers, Powerball, Mega Millions, and all 50 state lotteries. Fast, verified drawings updated in real-time.',
+  alternates: {
+    canonical: 'https://allusalottery.com',
+  },
+  keywords: [
+    'USA lottery results today',
+    'lottery winning numbers 2026',
+    'Powerball winning numbers',
+    'Mega Millions results',
+    'state lottery results live',
+    'tonight\'s lottery numbers',
+    'allusalottery'
+  ],
+  openGraph: {
+    title: 'USA Lottery Results Today & Winning Numbers 2026',
+    description: 'Real-time winning numbers and jackpots for Powerball, Mega Millions, and all 50 US State lotteries.',
+    url: 'https://allusalottery.com',
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    type: 'website',
+    siteName: 'All USA Lottery',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'USA Lottery Results Today & Winning Numbers 2026',
+    description: 'Check official winning numbers and jackpots live.',
+    images: ['/og-image.png'],
+  }
+};
+
 export default async function Home({ searchParams }: { searchParams: Promise<{ country?: string }> }) {
   const { country } = await searchParams;
   const states = await getStates(country);
   const jackpotGames = await getTopJackpots();
 
+  const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    'name': 'All USA Lottery',
+    'url': 'https://allusalottery.com',
+    'potentialAction': {
+      '@type': 'SearchAction',
+      'target': 'https://allusalottery.com/results/{search_term_string}',
+      'query-input': 'required name=search_term_string'
+    }
+  };
+
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    'name': 'All USA Lottery',
+    'url': 'https://allusalottery.com',
+    'logo': 'https://allusalottery.com/og-image.png',
+    'sameAs': [
+      'https://twitter.com/allusalottery'
+    ]
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
       {/* Hero Section */}
       <section className="relative bg-[#0f172a] py-20 md:py-32 overflow-hidden pb-32">
         {/* Background Effects */}
@@ -165,9 +227,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             <Zap size={14} className="text-[#f59e0b]" />
             <span className="text-xs font-bold text-white uppercase tracking-widest">Live Results & Updates</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter leading-tight">
-            Winning Numbers, <br />
-            <span className="text-[#f59e0b]">Accurate & Instant.</span>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 tracking-tighter leading-tight">
+            USA Lottery Results Today & <br />
+            <span className="text-[#f59e0b]">Live Winning Numbers</span>
           </h1>
           <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-medium">
             The professional destination for US & Canada lottery results. 

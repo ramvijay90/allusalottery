@@ -71,15 +71,33 @@ export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-    title: 'Live Lottery Results & Latest Winning Numbers',
-    description: 'Track the absolute latest real-time lottery draws from 50 US States as they happen. Watch live winning numbers drop instantly.',
-    keywords: ['live lottery results', 'latest winning numbers', 'real time lottery', 'today lottery results', 'lottery live feed'],
+    title: 'Live Lottery Results Today & Tonight\'s Winning Numbers 2026 | All States',
+    description: 'Track official live lottery results today and tonight\'s winning numbers from 50 US States, Canada, and multi-state drawings like Powerball and Mega Millions live.',
+    alternates: {
+        canonical: 'https://allusalottery.com/live-results',
+    },
+    keywords: [
+        'live lottery results',
+        'live lottery results today',
+        'tonight\'s winning numbers',
+        'latest winning numbers 2026',
+        'real time lottery results',
+        'today lottery results',
+        'lottery live feed'
+    ],
     openGraph: {
-        title: 'Live Lottery Results Feed',
-        description: 'Track live incoming lottery draws from 50 states as they happen.',
+        title: 'Live Lottery Results Today & Tonight\'s Winning Numbers 2026',
+        description: 'Track incoming lottery draws live from 50 states as they happen.',
         url: 'https://allusalottery.com/live-results',
         images: [{ url: '/og-image.png', width: 1200, height: 630 }],
         type: 'website',
+        siteName: 'All USA Lottery',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Live Lottery Results Today & Tonight\'s Winning Numbers 2026',
+        description: 'Track real-time lottery draws from 50 states live.',
+        images: ['/og-image.png'],
     }
 };
 
@@ -114,8 +132,31 @@ async function getLiveResults() {
 export default async function LiveResultsPage() {
     const { games, stateMap } = await getLiveResults();
 
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        'itemListElement': [
+            {
+                '@type': 'ListItem',
+                'position': 1,
+                'name': 'Home',
+                'item': 'https://allusalottery.com'
+            },
+            {
+                '@type': 'ListItem',
+                'position': 2,
+                'name': 'Live Results',
+                'item': 'https://allusalottery.com/live-results'
+            }
+        ]
+    };
+
     return (
         <div className="flex flex-col lg:flex-row justify-center items-center lg:items-start gap-8 px-4 py-12 w-full mx-auto">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+            />
             {/* Left Sidebar - Desktop Only */}
             <aside className="hidden lg:block w-72 sticky top-28 h-fit">
                 <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm mb-6">
@@ -139,8 +180,8 @@ export default async function LiveResultsPage() {
                               <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                             </span>
                         </span>
-                        <h1 className="text-4xl md:text-5xl font-black text-[#0f172a] tracking-tighter">
-                            Live <span className="text-red-600">Results</span>
+                        <h1 className="text-3xl md:text-5xl font-black text-[#0f172a] tracking-tighter">
+                            Live Lottery Results Today & <span className="text-red-600">Winning Numbers</span>
                         </h1>
                     </div>
                     <p className="text-slate-500 font-medium max-w-xl">

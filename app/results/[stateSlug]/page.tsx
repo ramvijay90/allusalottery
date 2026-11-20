@@ -92,9 +92,44 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
     const data = await getStateData(stateSlug);
     if (!data) return { title: 'State Not Found' };
 
+    const currentYear = new Date().getFullYear();
+    const stateName = data.state.name;
+    const isCanada = data.state.country === 'Canada';
+    const regionLabel = isCanada ? 'Canada' : 'USA';
+
+    const title = `${stateName} Lottery Results Today & Winning Numbers ${currentYear} | ${regionLabel}`;
+    const description = `Official ${stateName} lottery results today, live winning numbers, daily jackpot updates, and complete game schedules for ${currentYear}. Fast, verified drawings.`;
+    const canonicalUrl = `https://allusalottery.com/results/${stateSlug}`;
+
     return {
-        title: `${data.state.name} Lottery Results - Winning Numbers`,
-        description: `Latest ${data.state.name} lottery results, winning numbers, and jackpots. Updated instantly.`,
+        title,
+        description,
+        alternates: {
+            canonical: canonicalUrl,
+        },
+        keywords: [
+            `${stateName} lottery`,
+            `${stateName} lottery results`,
+            `${stateName} lottery results today`,
+            `${stateName} winning numbers ${currentYear}`,
+            `${stateName} lotto live`,
+            'daily lottery drawings',
+            'state lottery results'
+        ],
+        openGraph: {
+            title,
+            description,
+            url: canonicalUrl,
+            images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+            type: 'website',
+            siteName: 'All USA Lottery',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: ['/og-image.png'],
+        }
     };
 }
 
@@ -121,9 +156,62 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
     }
 
     const { state, games } = data;
+    const currentYear = new Date().getFullYear();
+
+    // BreadcrumbList JSON-LD Schema
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        'itemListElement': [
+            {
+                '@type': 'ListItem',
+                'position': 1,
+                'name': 'Home',
+                'item': 'https://allusalottery.com'
+            },
+            {
+                '@type': 'ListItem',
+                'position': 2,
+                'name': `${state.name} Lottery Results`,
+                'item': `https://allusalottery.com/results/${state.slug}`
+            }
+        ]
+    };
+
+    // FAQPage JSON-LD Schema
+    const faqSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': [
+            {
+                '@type': 'Question',
+                'name': `Where can I find today's ${state.name} lottery winning numbers?`,
+                'acceptedAnswer': {
+                    '@type': 'Answer',
+                    'text': `All official ${state.name} lottery winning numbers are updated live immediately following each daily drawing right on this page.`
+                }
+            },
+            {
+                '@type': 'Question',
+                'name': `What games are drawn in ${state.name}?`,
+                'acceptedAnswer': {
+                    '@type': 'Answer',
+                    'text': `${state.name} offers multiple lottery games including ${games.slice(0, 5).map((g: any) => g.name).join(', ')}, and multi-state drawings like Powerball and Mega Millions.`
+                }
+            }
+        ]
+    };
 
     return (
         <div className="flex flex-col lg:flex-row justify-center items-center lg:items-start gap-8 px-4 py-12 w-full mx-auto">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+            />
             {/* Left Sidebar - Desktop Only */}
             <aside className="hidden lg:block w-72 sticky top-28 h-fit">
                 <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm mb-6">
@@ -147,8 +235,8 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
                                 <span className="w-12 h-12 bg-[#0f172a] text-[#f59e0b] rounded-xl flex items-center justify-center text-sm font-black shadow-lg">
                                     {STATE_ABBREVIATIONS[state.slug] || state.slug.substring(0, 2).toUpperCase()}
                                 </span>
-                                <h1 className="text-4xl font-black text-[#0f172a] tracking-tighter">
-                                    {state.name} <span className="text-slate-400">Lottery</span>
+                                <h1 className="text-3xl md:text-4xl font-black text-[#0f172a] tracking-tighter">
+                                    {state.name} Lottery Results Today & Winning Numbers
                                 </h1>
                             </div>
                             <p className="text-slate-500 font-medium">Official winning numbers and latest jackpots.</p>

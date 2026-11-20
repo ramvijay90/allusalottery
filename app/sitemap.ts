@@ -16,10 +16,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
+      url: `${baseUrl}/live-results`,
+      lastModified: defaultLastModified,
+      changeFrequency: 'always',
+      priority: 0.95,
+    },
+    {
       url: `${baseUrl}/lucky-number-generator`,
       lastModified: defaultLastModified,
-      changeFrequency: 'monthly',
-      priority: 0.8,
+      changeFrequency: 'weekly',
+      priority: 0.85,
     },
     {
       url: `${baseUrl}/about`,
