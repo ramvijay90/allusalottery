@@ -47,7 +47,7 @@ export default function HistoryList({ initialHistory, gameId, cutoffDate }: Hist
                 <h3 className="text-xl font-black text-[#0f172a] uppercase tracking-tight">Recent Draw History</h3>
                 <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Showing Last 365 Days</div>
             </div>
-            <div className="overflow-x-auto">
+            <div className="w-full max-w-full overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-[#0f172a] text-white/70 text-[10px] font-black uppercase tracking-[0.2em]">

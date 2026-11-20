@@ -62,10 +62,9 @@ export default function RootLayout({
     <html lang="en">
       <body suppressHydrationWarning className={`${jakarta.className} bg-slate-50 text-slate-900 min-h-screen flex flex-col`}>
         <Script 
-          async 
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8960486737984002" 
           crossOrigin="anonymous"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
         {/* Header */}
         <header className="glass sticky top-0 z-50 border-b border-slate-200/50">
