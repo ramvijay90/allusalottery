@@ -40,6 +40,16 @@ export const metadata: Metadata = {
     description: 'Get the latest winning numbers for Mega Millions, Powerball, and all state lotteries instantly.',
     images: ['/og-image.png'],
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico?v=3' },
+      { url: '/icon.png?v=3', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.svg?v=3', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png?v=3', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   robots: {
     index: true,
     follow: true,
@@ -60,6 +70,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+        <link rel="icon" href="/icon.png?v=3" type="image/png" sizes="32x32" />
+        <link rel="icon" href="/favicon.svg?v=3" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
+      </head>
       <body suppressHydrationWarning className={`${jakarta.className} bg-slate-50 text-slate-900 min-h-screen flex flex-col`}>
         <Script 
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8960486737984002" 

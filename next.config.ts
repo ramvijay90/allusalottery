@@ -46,6 +46,27 @@ const nextConfig: NextConfig = {
         destination: '/lucky-number-generator',
         permanent: true,
       },
+      // Clean up legacy WordPress /tag/ and /category/ URLs crawled by Googlebot
+      {
+        source: '/category/uk-and-europe-lotto-lucky-generator(/?)',
+        destination: '/lucky-number-generator',
+        permanent: true,
+      },
+      {
+        source: '/category/:slug*',
+        destination: '/lucky-number-generator',
+        permanent: true,
+      },
+      {
+        source: '/tag/:slug*',
+        destination: '/results',
+        permanent: true,
+      },
+      {
+        source: '/:slug*/feed(/?)',
+        destination: '/:slug*',
+        permanent: true,
+      },
       // You can add limitless regex patterns here to catch old WordPress paths!
       // Example: migrating /florida/fantasy-5/ to /results/fl/fantasy-5
       // {
@@ -53,6 +74,14 @@ const nextConfig: NextConfig = {
       //   destination: '/results/:state/:game', // Next.js Structure
       //   permanent: true,
       // }
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/download-chart',
+        destination: '/api/download',
+      },
     ];
   },
 };

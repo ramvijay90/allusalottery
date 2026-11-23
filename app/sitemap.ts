@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next';
 import connectToDatabase from '@/lib/db';
 import State from '@/models/State';
 import Game from '@/models/Game';
+import { CATEGORIES } from '@/lib/lotteryCategories';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://allusalottery.com';
@@ -27,6 +28,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.85,
     },
+    ...CATEGORIES.map((cat) => ({
+      url: `${baseUrl}/lucky-number-generator/${cat.id}`,
+      lastModified: defaultLastModified,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    })),
     {
       url: `${baseUrl}/about`,
       lastModified: defaultLastModified,
@@ -67,8 +74,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
     }
 
-    // Add all active games to the sitemap
-    const games = await Game.find().lean();
+    // Add only active games with verified numbers to the sitemap (prevents indexing thin/empty games)
+    const games = await Game.find({
+      numbers: { $exists: true, $not: { $size: 0 } }
+    }).lean();
     for (const game of games) {
       entries.push({
         url: `${baseUrl}/results/${game.stateSlug}/${game.slug}`,

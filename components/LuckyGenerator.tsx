@@ -4,8 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { CATEGORIES, LotteryCategory } from '@/lib/lotteryCategories';
 import { RefreshCw, Copy, Trash2, Wand2, Share2, Facebook, Send, MessageCircle, ChevronDown } from 'lucide-react';
 
-export default function LuckyGenerator() {
-  const [activeCategory, setActiveCategory] = useState<LotteryCategory>(CATEGORIES[0]);
+interface LuckyGeneratorProps {
+  initialCategoryId?: string;
+}
+
+export default function LuckyGenerator({ initialCategoryId }: LuckyGeneratorProps) {
+  const defaultCat = initialCategoryId 
+    ? (CATEGORIES.find(c => c.id.toLowerCase() === initialCategoryId.toLowerCase()) || CATEGORIES[0])
+    : CATEGORIES[0];
+  const [activeCategory, setActiveCategory] = useState<LotteryCategory>(defaultCat);
 
   // Standard Strategy State
   const [ticketCount, setTicketCount] = useState(1);
@@ -493,7 +500,7 @@ export default function LuckyGenerator() {
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 mb-20 max-w-4xl mx-auto -mt-40 relative z-20">
+    <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 mb-8 w-full mx-auto relative z-20">
       <div className="flex flex-wrap justify-center gap-2 mb-6 pb-4 border-b border-slate-100 max-h-[300px] overflow-y-auto custom-scrollbar">
         {CATEGORIES.map(cat => (
           <button
@@ -512,7 +519,7 @@ export default function LuckyGenerator() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
         {/* Settings Panel */}
-        <div className="lg:col-span-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col items-center">
+        <div className="lg:col-span-4 bg-slate-50/80 p-5 rounded-2xl border border-slate-200/80 flex flex-col justify-between shadow-xs">
           <h3 className="text-sm font-black text-[#0f172a] mb-4 flex items-center justify-center gap-2">
             <Wand2 size={16} className="text-[#f59e0b]" /> {activeCategory.name}
           </h3>
@@ -804,18 +811,19 @@ export default function LuckyGenerator() {
             </div>
           )}
 
-          <div className="w-full flex justify-center pt-4">
+          <div className="w-full pt-6 mt-auto">
             <button
               onClick={generate}
-              className="bg-[#f59e0b] hover:bg-amber-500 text-[#0f172a] font-black py-3.5 px-12 rounded-full shadow-xl shadow-amber-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-3 text-xs uppercase tracking-[0.2em]"
+              className="w-full bg-[#f59e0b] hover:bg-amber-400 text-slate-950 font-black py-3.5 px-4 rounded-2xl shadow-lg shadow-amber-500/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2.5 text-xs sm:text-sm uppercase tracking-wider cursor-pointer border border-amber-600/20"
             >
-              <RefreshCw size={14} className="" /> {activeCategory.id === 'all-possible' ? 'GENERATE BOX' : 'GENERATE'}
+              <RefreshCw size={16} className="text-slate-950" />
+              <span>{activeCategory.id === 'all-possible' ? 'Generate Box' : 'Generate Numbers'}</span>
             </button>
           </div>
         </div>
 
         {/* Results Panel */}
-        <div className="lg:col-span-9 flex flex-col">
+        <div className="lg:col-span-8 flex flex-col">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Results</h3>
             <div className="flex gap-1.5">

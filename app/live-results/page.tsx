@@ -10,6 +10,24 @@ import SidebarAd from '@/components/ads/SidebarAd';
 import InFeedAd from '@/components/ads/InFeedAd';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
 
+function cleanJackpot(jackpotStr?: string): string {
+  if (!jackpotStr) return '';
+  let text = jackpotStr.trim();
+  if (!text || text.toLowerCase() === 'official' || text.toLowerCase() === 'official result') return '';
+  text = text.replace(/^CAS(?=\d)/i, 'CA$');
+  const caMatch = text.match(/(?:CA\s?\$?|CAD\s?\$?)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
+  if (caMatch && caMatch[0].length >= 3) {
+    let res = caMatch[0].trim();
+    if (/^CA(?!\$)/i.test(res)) res = res.replace(/^CA/i, 'CA$');
+    return res;
+  }
+  const usMatch = text.match(/(?:US\s?\$?|\$)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
+  if (usMatch && usMatch[0].length >= 2) return usMatch[0].trim();
+  const millionMatch = text.match(/[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
+  if (millionMatch) return `$${millionMatch[0].trim()}`;
+  return text.length > 18 ? text.slice(0, 16) + '...' : text;
+}
+
 const STATE_ABBREVIATIONS: { [key: string]: string } = {
   arizona: 'AZ',
   arkansas: 'AR',
@@ -222,15 +240,15 @@ export default async function LiveResultsPage() {
                                                 {new Date(game.lastDrawDate).toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', year: 'numeric' })}
                                             </span>
                                         </div>
-                                        {game.jackpot && (
-                                            <div className="mt-2 text-xl font-black text-[#0f172a]">{game.jackpot}</div>
+                                        {cleanJackpot(game.jackpot) && (
+                                            <div className="mt-2 text-xl font-black text-[#0f172a]">{cleanJackpot(game.jackpot)}</div>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* Balls */}
                                 <div className="flex flex-wrap items-center gap-3 mb-6 px-2">
-                                    {game.numbers.map((num: string, idx: number) => (
+                                    {(game.numbers || []).filter((num: string) => /^\d+$/.test(num.trim())).map((num: string, idx: number) => (
                                         <span key={`n-${idx}`} className="w-12 h-12 bg-white border-2 border-slate-200 text-[#0f172a] text-lg font-black rounded-full flex items-center justify-center shadow-lg transform group-hover:-translate-y-1 transition-transform">
                                             {num}
                                         </span>

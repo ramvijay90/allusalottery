@@ -133,7 +133,10 @@ async function parseAndSaveGames(html: string, stateSlug: string) {
             // Numbers
             const numbers: string[] = [];
             drawBlock.find('.resultsnumsrow').first().find('li').each((_, li) => {
-                numbers.push($(li).text().trim());
+                const val = $(li).text().trim();
+                if (/^\d+$/.test(val)) {
+                    numbers.push(val);
+                }
             });
 
             // Special Balls (Powerball, Mega Ball)

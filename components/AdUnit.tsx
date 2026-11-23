@@ -70,6 +70,26 @@ export default function AdUnit({
     } else {
       pushAd();
     }
+
+    // MutationObserver to hide unfilled ads without collapsing layout height
+    let mutationObserver: MutationObserver | null = null;
+    if (adRef.current && 'MutationObserver' in window) {
+      mutationObserver = new MutationObserver(() => {
+        if (adRef.current?.getAttribute('data-ad-status') === 'unfilled') {
+          if (containerRef.current) {
+            containerRef.current.style.visibility = 'hidden';
+          }
+        }
+      });
+      mutationObserver.observe(adRef.current, {
+        attributes: true,
+        attributeFilter: ['data-ad-status'],
+      });
+    }
+
+    return () => {
+      mutationObserver?.disconnect();
+    };
   }, [blocked]);
 
   if (blocked) {

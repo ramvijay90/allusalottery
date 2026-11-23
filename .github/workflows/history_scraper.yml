@@ -1,0 +1,95 @@
+name: Lottery History Scraper
+
+on:
+  workflow_dispatch:
+    inputs:
+      year:
+        description: 'Year to scrape (e.g. 2026, 2025)'
+        required: true
+        default: '2026'
+      scope:
+        description: 'Select scope: local (State-only games), national (National only), or all'
+        required: true
+        default: 'local'
+        type: choice
+        options:
+          - 'local'
+          - 'all'
+          - 'national'
+      state:
+        description: 'Optional single state code (e.g. "az", "ca", "fl" or leave empty for all)'
+        required: false
+        default: ''
+
+jobs:
+  scrape-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Puppeteer System Libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            fonts-liberation \
+            libasound2 \
+            libatk-bridge2.0-0 \
+            libatk1.0-0 \
+            libc6 \
+            libcairo2 \
+            libcups2 \
+            libdbus-1-3 \
+            libexpat1 \
+            libfontconfig1 \
+            libgbm1 \
+            libgcc1 \
+            libglib2.0-0 \
+            libgtk-3-0 \
+            libnspr4 \
+            libnss3 \
+            libpango-1.0-0 \
+            libpangocairo-1.0-0 \
+            libstdc++6 \
+            libx11-6 \
+            libx11-xcb1 \
+            libxcb1 \
+            libxcomposite1 \
+            libxcursor1 \
+            libxdamage1 \
+            libxext6 \
+            libxfixes3 \
+            libxi6 \
+            libxrandr2 \
+            libxrender1 \
+            libxss1 \
+            libxtst6 \
+            ca-certificates \
+            xdg-utils
+
+      - name: Run Historical Batch Crawler
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          CMD_ARGS="--year=${{ github.event.inputs.year }}"
+          if [ "${{ github.event.inputs.scope }}" = "local" ]; then
+            CMD_ARGS="$CMD_ARGS --localOnly"
+          elif [ "${{ github.event.inputs.scope }}" = "national" ]; then
+            CMD_ARGS="$CMD_ARGS --national"
+          fi
+          if [ -n "${{ github.event.inputs.state }}" ]; then
+            CMD_ARGS="$CMD_ARGS --state=${{ github.event.inputs.state }}"
+          fi
+          echo "Executing: npx tsx lottery-scraper/history_batch_runner.ts $CMD_ARGS"
+          npx tsx lottery-scraper/history_batch_runner.ts $CMD_ARGS

@@ -1,0 +1,79 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { TrendingUp, Sparkles, Trophy, Calendar, Zap, LayoutGrid } from 'lucide-react';
+
+interface LotteryChartNavigationProps {
+  stateSlug?: string;
+  gameSlug?: string;
+  country?: string;
+}
+
+export default function LotteryChartNavigation({ stateSlug, gameSlug }: LotteryChartNavigationProps) {
+  const pathname = usePathname();
+
+  // Top National & Multi-State Charts (Verified working database routes)
+  const nationalCharts = [
+    { name: 'Powerball Chart', href: '/results/ca/powerball', flag: '🇺🇸' },
+    { name: 'Mega Millions Chart', href: '/results/ca/mega-millions', flag: '🇺🇸' },
+    { name: 'Lotto Max Chart', href: '/results/on/lotto-max', flag: '🇨🇦' },
+    { name: 'Lotto 6/49 Chart', href: '/results/on/canada-lotto-6-49', flag: '🇨🇦' },
+  ];
+
+  // Top Popular States
+  const popularStates = [
+    { name: 'California Results', href: '/results/ca' },
+    { name: 'Texas Results', href: '/results/tx' },
+    { name: 'Florida Results', href: '/results/fl' },
+    { name: 'New York Results', href: '/results/ny' },
+    { name: 'Live Feeds', href: '/live-results' },
+  ];
+
+  return (
+    <nav aria-label="Lottery Chart Navigation" className="mb-8 space-y-3" suppressHydrationWarning>
+      {/* Primary Chart Pills */}
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+        {nationalCharts.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={false}
+              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+                isActive
+                  ? 'bg-[#f59e0b] text-[#0f172a] shadow-lg shadow-amber-500/20 scale-105 ring-2 ring-amber-400'
+                  : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-[#0f172a] border border-slate-200 shadow-sm'
+              }`}
+            >
+              <span>{item.flag}</span>
+              <span>{item.name}</span>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Secondary Regional Quick Nav */}
+      <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
+        {popularStates.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={false}
+              className={`px-3 py-1 rounded-full transition-colors font-bold ${
+                isActive
+                  ? 'bg-slate-900 text-white'
+                  : 'bg-slate-100 text-slate-600 hover:bg-amber-100 hover:text-amber-900'
+              }`}
+            >
+              {item.name} →
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}

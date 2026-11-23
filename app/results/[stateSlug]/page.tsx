@@ -1,5 +1,5 @@
 import React from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Calendar, ChevronRight } from 'lucide-react';
@@ -10,6 +10,8 @@ import MultiplexAd from '@/components/ads/MultiplexAd';
 import SidebarAd from '@/components/ads/SidebarAd';
 import InFeedAd from '@/components/ads/InFeedAd';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
+import ChartImagePreview from '@/components/ChartImagePreview';
+import LotteryChartNavigation from '@/components/LotteryChartNavigation';
 
 const STATE_ABBREVIATIONS: { [key: string]: string } = {
   arizona: 'AZ',
@@ -19,6 +21,8 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   connecticut: 'CT',
   delaware: 'DE',
   dc: 'DC',
+  washingtondc: 'DC',
+  districtcolumbia: 'DC',
   florida: 'FL',
   georgia: 'GA',
   idaho: 'ID',
@@ -60,12 +64,24 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   westvirginia: 'WV',
   wisconsin: 'WI',
   wyoming: 'WY',
-  atlantic: 'ATL',
+  atlanticcanada: 'AC',
+  atlantic: 'AC',
   bc: 'BC',
+  britishcolumbia: 'BC',
   ontario: 'ON',
   quebec: 'QC',
-  western: 'WES'
+  westerncanada: 'WC',
+  western: 'WC'
 };
+
+function resolveStateSlug(input: string): string {
+  const clean = (input || '').toLowerCase().trim();
+  const normalizedKey = clean.replace(/[^a-z]/g, '');
+  if (STATE_ABBREVIATIONS[normalizedKey]) {
+    return STATE_ABBREVIATIONS[normalizedKey].toLowerCase();
+  }
+  return clean;
+}
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -89,7 +105,8 @@ async function getStateData(slug: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ stateSlug: string }> }) {
     const { stateSlug } = await params;
-    const data = await getStateData(stateSlug);
+    const resolved = resolveStateSlug(stateSlug);
+    const data = await getStateData(resolved);
     if (!data) return { title: 'State Not Found' };
 
     const currentYear = new Date().getFullYear();
@@ -99,7 +116,8 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
 
     const title = `${stateName} Lottery Results Today & Winning Numbers ${currentYear} | ${regionLabel}`;
     const description = `Official ${stateName} lottery results today, live winning numbers, daily jackpot updates, and complete game schedules for ${currentYear}. Fast, verified drawings.`;
-    const canonicalUrl = `https://allusalottery.com/results/${stateSlug}`;
+    const canonicalUrl = `https://allusalottery.com/results/${resolved}`;
+    const ogImageUrl = `https://allusalottery.com/results/${resolved}/opengraph-image`;
 
     return {
         title,
@@ -120,7 +138,14 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
             title,
             description,
             url: canonicalUrl,
-            images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+            images: [
+                {
+                    url: ogImageUrl,
+                    width: 1200,
+                    height: 630,
+                    alt: `${stateName} Lottery Results Today Live`,
+                }
+            ],
             type: 'website',
             siteName: 'All USA Lottery',
         },
@@ -128,31 +153,24 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
             card: 'summary_large_image',
             title,
             description,
-            images: ['/og-image.png'],
+            images: [ogImageUrl],
         }
     };
 }
 
 export default async function StatePage({ params }: { params: Promise<{ stateSlug: string }> }) {
     const { stateSlug } = await params;
-    const data = await getStateData(stateSlug);
+    const resolved = resolveStateSlug(stateSlug);
+
+    // If full state name was passed (e.g. /results/ontario), redirect to canonical /results/on
+    if (resolved !== stateSlug) {
+        redirect(`/results/${resolved}`);
+    }
+
+    const data = await getStateData(resolved);
 
     if (!data) {
-        // If it's a 404 vs DB error, hard to tell, but let's assume if params are valid it might be DB
-        // For now, if no data, we could show notFound or a custom error state.
-        // Let's return a "Service Unavailable" style fallback if it looks like a DB issue?
-        // Actually next.js notFound() is fine, but maybe we want to show the error message.
-        // For simplicity, let's just trigger notFound() which is standard, 
-        // OR return a custom error component.
-        // Let's stick to notFound for invalid states, but we need to handle "DB offline" distinct from "State doesn't exist".
-        // With the current try/catch returning null, it will 404. That's acceptable for now.
-        return (
-            <div className="max-w-4xl mx-auto py-12 text-center">
-                <h2 className="text-2xl font-bold text-red-600 mb-2">System Unavailable</h2>
-                <p className="text-slate-600">We could not retrieve lottery results at this time. Please check your connection or try again later.</p>
-                <Link href="/" className="text-blue-600 hover:align-baseline mt-4 inline-block">Return Home</Link>
-            </div>
-        );
+        return notFound();
     }
 
     const { state, games } = data;
@@ -203,7 +221,7 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
     };
 
     return (
-        <div className="flex flex-col lg:flex-row justify-center items-center lg:items-start gap-8 px-4 py-12 w-full mx-auto">
+        <div className="flex flex-col xl:flex-row justify-between items-center xl:items-start gap-6 xl:gap-8 px-4 sm:px-6 xl:px-8 py-12 w-full max-w-[1760px] mx-auto">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
@@ -213,7 +231,7 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
             />
             {/* Left Sidebar - Desktop Only */}
-            <aside className="hidden lg:block w-72 sticky top-28 h-fit">
+            <aside className="hidden xl:block w-72 shrink-0 sticky top-24 self-start space-y-6">
                 <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm mb-6">
                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Sponsored</h3>
                     <SidebarAd />
@@ -224,8 +242,11 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
             </aside>
 
             {/* Main Content Column */}
-            <main className="w-full max-w-4xl mx-auto lg:mx-0">
-                <div className="mb-12">
+            <main className="flex-1 w-full min-w-0 max-w-6xl mx-auto space-y-8">
+                {/* Visual Chart Navigation */}
+                <LotteryChartNavigation stateSlug={state.slug} country={state.country} />
+
+                <div className="mb-8">
                     <Link href="/" className="text-slate-400 hover:text-[#0f172a] text-xs font-bold uppercase tracking-widest mb-4 inline-block transition-colors">
                         &larr; All States
                     </Link>
@@ -244,13 +265,21 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
                     </div>
                 </div>
 
+                {/* Visual Image Preview & Printable Download Card for Google Discover / Images */}
+                <ChartImagePreview
+                    imageSrc={`/results/${state.slug}/opengraph-image`}
+                    altText={`${state.name} Lottery Results Chart 2026 - Today Winning Numbers`}
+                    title={`${state.name} Lottery Results Chart 2026`}
+                    downloadFileName={`${state.slug}-lottery-results-chart-2026.png`}
+                />
+
                 {/* Before Content Ad */}
                 <BeforeContentAd />
 
                 <div className="grid gap-8">
                     {games.map((game: any, index: number) => (
                         <React.Fragment key={game._id}>
-                            <div className="premium-card p-8">
+                            <div className="premium-card p-5 sm:p-8">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
                                     <div className="flex items-center gap-5">
                                         {game.imageUrl && (
@@ -316,12 +345,63 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
                     )}
                 </div>
 
+                {/* SEO Text & Frequently Asked Questions */}
+                <div className="mt-12 space-y-8">
+                    {/* State Lottery Overview */}
+                    <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100">
+                        <h2 className="text-2xl font-black text-[#0f172a] mb-4 pb-3 border-b border-slate-100 flex items-center gap-2">
+                            <span>ℹ️</span> About {state.name} Lottery Results & Schedule
+                        </h2>
+                        <div className="text-slate-600 text-sm leading-relaxed space-y-3">
+                            <p>
+                                Welcome to the official <strong>{state.name} Lottery Results</strong> hub. We provide verified, real-time winning numbers for daily draws, mid-day drawings, evening drawings, and multi-state drawings like Powerball and Mega Millions.
+                            </p>
+                            <p>
+                                Every drawing is synced directly with official lottery commission feeds. Whether you need today&apos;s winning numbers, jackpot amounts, or complete past archives, you can explore each game&apos;s 365-day history by clicking &quot;Past Results&quot; on any game card above.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* FAQs */}
+                    <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100">
+                        <h2 className="text-2xl font-black text-[#0f172a] mb-6 pb-3 border-b border-slate-100 flex items-center gap-2">
+                            <span>❓</span> Frequently Asked Questions ({state.name} Lottery)
+                        </h2>
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-slate-900 text-base flex items-start gap-2">
+                                    <span className="text-[#f59e0b] font-black">Q.</span> What time are {state.name} lottery drawings held?
+                                </h3>
+                                <p className="text-sm text-slate-600 pl-6 leading-relaxed">
+                                    Drawing schedules vary by game. Midday drawings typically take place between 12:30 PM and 1:30 PM, while evening drawings occur between 7:00 PM and 11:00 PM local time. Winning numbers are posted live immediately after confirmation.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-slate-900 text-base flex items-start gap-2">
+                                    <span className="text-[#f59e0b] font-black">Q.</span> How do I check if my {state.name} lottery ticket won?
+                                </h3>
+                                <p className="text-sm text-slate-600 pl-6 leading-relaxed">
+                                    Compare the numbers printed on your ticket with the official winning numbers listed above for your specific draw date. For detailed payout tiers and prize breakdowns, click into each individual game page.
+                                </p>
+                            </div>
+                            <div className="space-y-2">
+                                <h3 className="font-bold text-slate-900 text-base flex items-start gap-2">
+                                    <span className="text-[#f59e0b] font-black">Q.</span> Can I play multi-state lotteries in {state.name}?
+                                </h3>
+                                <p className="text-sm text-slate-600 pl-6 leading-relaxed">
+                                    Yes, major multi-state games like Powerball and Mega Millions are available at licensed lottery retailers and online platforms where permitted in {state.name}.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Multiplex Ad Section */}
                 <MultiplexAd />
             </main>
 
             {/* Right Sidebar - Desktop Only */}
-            <aside className="hidden lg:block w-72 sticky top-28 h-fit">
+            <aside className="hidden lg:block w-72 shrink-0 sticky top-24 self-start space-y-6">
                 <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">More Results</h3>
                     <SidebarAd />

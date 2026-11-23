@@ -36,6 +36,10 @@ export default function MobileMenu() {
       {isOpen && (
         <div className="fixed inset-0 z-40 bg-white pt-24 px-6 flex flex-col h-screen overflow-y-auto">
           <nav className="flex flex-col gap-6 text-xl font-black text-[#0f172a] uppercase tracking-wide mt-4">
+            <Link href="/live-results" onClick={closeMenu} className="hover:text-red-600 text-red-600 transition-colors border-b border-slate-100 pb-4 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse"></span>
+              Live Results
+            </Link>
             <Link href="/?country=US#states" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
               USA States
             </Link>

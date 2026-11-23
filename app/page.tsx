@@ -3,6 +3,11 @@ import { ArrowRight, MapPin, Trophy, Zap } from 'lucide-react';
 import connectToDatabase from '@/lib/db';
 import State from '@/models/State';
 import Game from '@/models/Game';
+import HomeSeoContent from '@/components/HomeSeoContent';
+import BeforeContentAd from '@/components/ads/BeforeContentAd';
+import SidebarAd from '@/components/ads/SidebarAd';
+import InFeedAd from '@/components/ads/InFeedAd';
+import MultiplexAd from '@/components/ads/MultiplexAd';
 
 const STATE_ABBREVIATIONS: { [key: string]: string } = {
   arizona: 'AZ',
@@ -204,6 +209,45 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     ]
   };
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    'mainEntity': [
+      {
+        '@type': 'Question',
+        'name': 'How do I check live USA lottery results today?',
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': 'You can check live USA lottery results today directly on allusalottery.com. We publish instant verified winning numbers for Powerball, Mega Millions, and all 50 state lotteries immediately after each official drawing.'
+        }
+      },
+      {
+        '@type': 'Question',
+        'name': 'Where can I find official 2026 lottery charts and past history?',
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': 'Complete 2026 lottery charts, 365-day past draw archives, monthly charts, weekly day-of-week breakdowns, and overdue pending numbers are available under each lottery game page.'
+        }
+      },
+      {
+        '@type': 'Question',
+        'name': 'What days are Powerball and Mega Millions drawn?',
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': 'Powerball drawings take place every Monday, Wednesday, and Saturday at 10:59 PM EST. Mega Millions drawings are held every Tuesday and Friday at 11:00 PM EST.'
+        }
+      },
+      {
+        '@type': 'Question',
+        'name': 'Can I download and share lottery charts for free?',
+        'acceptedAnswer': {
+          '@type': 'Answer',
+          'text': 'Yes, every lottery page on All USA Lottery includes a free 1200x630 high-definition visual chart card that you can download or share directly via WhatsApp, Telegram, Facebook, and X.'
+        }
+      }
+    ]
+  };
+
   return (
     <>
       <script
@@ -213,6 +257,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       {/* Hero Section */}
       <section className="relative bg-[#0f172a] py-20 md:py-32 overflow-hidden pb-32">
@@ -276,49 +324,90 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           </div>
       </section>
 
-        {/* States Grid */}
-        <section id="states">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
-            <h2 className="text-3xl font-black text-[#0f172a] tracking-tight flex items-center gap-3">
-              <span className="w-1.5 h-8 bg-[#f59e0b] rounded-full block"></span>
-              {country ? `${country} Results` : 'Browse by State'}
-            </h2>
-            {country && (
-              <Link href="/" className="text-sm font-bold text-slate-400 hover:text-[#0f172a] transition-all flex items-center gap-2">
-                &times; CLEAR FILTER
-              </Link>
-            )}
-          </div>
+      {/* High-Impact Top Before Content Ad */}
+      <div className="container mx-auto px-4 -mt-10 mb-12 max-w-5xl">
+        <BeforeContentAd />
+      </div>
 
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {states.length === 0 ? (
-              <div className="col-span-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">
-                <h3 className="font-bold text-xl mb-2">Initialize Database</h3>
-                <p className="text-sm">Run the scraper to see state results here.</p>
-              </div>
-            ) : (
-              states.map((state: any) => {
-                const abbr = STATE_ABBREVIATIONS[state.slug] || state.slug.substring(0, 2).toUpperCase();
-                return (
-                  <Link
-                    href={`/results/${state.slug}`}
-                    key={state._id}
-                    className="group bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-[#f59e0b]/30 transition-all flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-slate-50 text-[#0f172a] flex items-center justify-center font-black text-sm group-hover:bg-[#0f172a] group-hover:text-[#f59e0b] transition-all shadow-inner">
-                        {abbr}
-                      </div>
-                      <span className="font-bold text-slate-700 group-hover:text-[#0f172a]">{state.name}</span>
-                    </div>
-                    <ArrowRight size={16} className="text-slate-300 group-hover:text-[#f59e0b] group-hover:translate-x-1 transition-all" />
-                  </Link>
-                );
-              })
-            )}
+      {/* Main 3-Column Layout with Wide Docked Sticky Sidebars */}
+      <div className="flex flex-col xl:flex-row justify-between items-center xl:items-start gap-6 xl:gap-8 px-4 sm:px-6 xl:px-8 py-8 w-full max-w-[1760px] mx-auto">
+        {/* Left Sticky Sidebar - Desktop Only */}
+        <aside className="hidden xl:block w-72 shrink-0 sticky top-24 self-start space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Sponsored</h3>
+            <SidebarAd />
           </div>
-        </section>
+          <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 text-slate-700 text-xs font-bold leading-relaxed shadow-xs">
+            ⭐ Verified real-time lottery numbers updated instantly after every official draw.
+          </div>
+        </aside>
+
+        {/* Center Main Content Column */}
+        <main className="flex-1 w-full min-w-0 max-w-6xl mx-auto space-y-12">
+          {/* States Grid */}
+          <section id="states">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
+              <h2 className="text-3xl font-black text-[#0f172a] tracking-tight flex items-center gap-3">
+                <span className="w-1.5 h-8 bg-[#f59e0b] rounded-full block"></span>
+                {country ? `${country} Results` : 'Browse by State'}
+              </h2>
+              {country && (
+                <Link href="/" className="text-sm font-bold text-slate-400 hover:text-[#0f172a] transition-all flex items-center gap-2">
+                  &times; CLEAR FILTER
+                </Link>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {states.length === 0 ? (
+                <div className="col-span-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-slate-200 text-slate-400">
+                  <h3 className="font-bold text-xl mb-2">Initialize Database</h3>
+                  <p className="text-sm">Run the scraper to see state results here.</p>
+                </div>
+              ) : (
+                states.map((state: any) => {
+                  const abbr = STATE_ABBREVIATIONS[state.slug] || state.slug.substring(0, 2).toUpperCase();
+                  return (
+                    <Link
+                      href={`/results/${state.slug}`}
+                      key={state._id}
+                      className="group bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-[#f59e0b]/30 transition-all flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-slate-50 text-[#0f172a] flex items-center justify-center font-black text-sm group-hover:bg-[#0f172a] group-hover:text-[#f59e0b] transition-all shadow-inner">
+                          {abbr}
+                        </div>
+                        <span className="font-bold text-slate-700 group-hover:text-[#0f172a]">{state.name}</span>
+                      </div>
+                      <ArrowRight size={16} className="text-slate-300 group-hover:text-[#f59e0b] group-hover:translate-x-1 transition-all" />
+                    </Link>
+                  );
+                })
+              )}
+            </div>
+          </section>
+
+          {/* In-Feed Responsive Ad Banner */}
+          <InFeedAd />
+
+          {/* High-Authority SEO Content, Weekly Schedule & Bottom Navigation Hub (Like Klsite) */}
+          <HomeSeoContent />
+
+          {/* Multiplex Bottom Grid Ad */}
+          <MultiplexAd />
+        </main>
+
+        {/* Right Sticky Sidebar - Desktop Only */}
+        <aside className="hidden xl:block w-72 shrink-0 sticky top-24 self-start space-y-6">
+          <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 px-2">Sponsored</h3>
+            <SidebarAd />
+          </div>
+          <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200 text-amber-950 text-xs font-black text-center shadow-xs">
+            Check your tickets carefully against verified drawings. Play responsibly!
+          </div>
+        </aside>
+      </div>
     </>
   );
 }

@@ -1,16 +1,14 @@
-import puppeteer from 'puppeteer';
+import puppeteer, { Browser, Page } from 'puppeteer';
 import * as cheerio from 'cheerio';
 import connectToDatabase from '../lib/db';
 import Game from '../models/Game';
 import Result from '../models/Result';
 
-async function fetchHistoryPage(url: string) {
-    console.log(`Launching browser for history: ${url}...`);
+async function createBrowserSession(): Promise<{ browser: Browser; page: Page }> {
     const launchArgs = [
         '--no-sandbox', 
         '--disable-setuid-sandbox', 
-        '--disable-dev-shm-usage', 
-        '--single-process'
+        '--disable-dev-shm-usage'
     ];
 
     const proxy = process.env.SCRAPER_PROXY;
@@ -27,89 +25,94 @@ async function fetchHistoryPage(url: string) {
         args: launchArgs
     });
 
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+    if (proxy && process.env.SCRAPER_PROXY_USERNAME && process.env.SCRAPER_PROXY_PASSWORD) {
+        console.log('Authenticating Proxy...');
+        await page.authenticate({
+            username: process.env.SCRAPER_PROXY_USERNAME,
+            password: process.env.SCRAPER_PROXY_PASSWORD
+        });
+    }
+
+    return { browser, page };
+}
+
+async function fetchPageWithSession(page: Page, url: string): Promise<string | null> {
+    const targetUrl = `https://www.lotterypost.com${url}`;
+    console.log(`Navigating to ${targetUrl}...`);
+
     try {
-        const page = await browser.newPage();
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 35000 });
+        const hasResults = await page.waitForSelector('.resultsgame', { timeout: 10000 }).catch(() => null);
 
-        if (proxy && process.env.SCRAPER_PROXY_USERNAME && process.env.SCRAPER_PROXY_PASSWORD) {
-            console.log('Authenticating Proxy...');
-            await page.authenticate({
-                username: process.env.SCRAPER_PROXY_USERNAME,
-                password: process.env.SCRAPER_PROXY_PASSWORD
-            });
-        }
-
-        console.log(`Navigating to https://www.lotterypost.com${url}...`);
-        try {
-            await page.goto(`https://www.lotterypost.com${url}`, { waitUntil: 'load', timeout: 90000 });
-        } catch (err: any) {
-            console.log('Navigation event finished (possible Cloudflare challenge page redirect).');
-        }
-
-        console.log('Waiting for results content to load (bypassing Cloudflare)...');
-        const startTime = Date.now();
-        const timeoutMs = 60000;
-        let selectorFound = false;
-
-        while (Date.now() - startTime < timeoutMs) {
-            try {
-                await page.waitForSelector('.resultsgame', { timeout: 2000 });
-                selectorFound = true;
-                break;
-            } catch (err: any) {
-                if (err.message.includes('detached') || err.message.includes('Session closed') || err.message.includes('Execution context')) {
-                    console.log('[Selector Safe] Frame changed/detached. Retrying for .resultsgame...');
-                    await new Promise(r => setTimeout(r, 2000));
-                    continue;
-                }
-                // Short wait before retry
-                await new Promise(r => setTimeout(r, 1000));
+        if (!hasResults) {
+            const pageText = await page.evaluate(() => document.body ? document.body.innerText : '').catch(() => '');
+            if (pageText.includes('No results found') || pageText.includes('Page Not Found') || pageText.includes('There were no drawings')) {
+                console.log(`ℹ️ No drawings held for this period on ${url}`);
+                return null;
             }
+            return null;
         }
 
-        if (!selectorFound) {
-            throw new Error('Timeout waiting for .resultsgame to render.');
-        }
-
-        // Short sleep for final render
-        await new Promise(r => setTimeout(r, 3000));
-
-        const content = await page.content();
-        await browser.close();
-        return content;
-    } catch (error) {
-        console.error(`Error fetching history ${url}:`, error);
-        await browser.close();
+        // Brief wait for any dynamic hydration
+        await new Promise(r => setTimeout(r, 1000));
+        return await page.content();
+    } catch (error: any) {
+        console.error(`Error loading ${url}:`, error.message);
         return null;
     }
 }
 
-async function parseAndSaveHistory(html: string, gameId: string) {
+async function parseAndSaveHistory(html: string, gameId: string): Promise<number> {
     const $ = cheerio.load(html);
     const resultsToSave: any[] = [];
 
-    // Iterate over history rows
-    // Structure is .resultsgame divs
     $('.resultsgame').each((_, element) => {
         const row = $(element);
         const dateStr = row.find('time').attr('datetime');
 
+        // 1. Detect Powerball / Bonus Ball (.red, .resultsbonus, or dedicated row)
+        let powerBall: string | null = null;
+        const bonusLi = row.find('li.red, li.resultsbonus, li.bonus').first();
+        if (bonusLi.length > 0) {
+            const bVal = bonusLi.text().trim();
+            if (/^\d+$/.test(bVal)) {
+                powerBall = bVal;
+            }
+        }
+
+        if (!powerBall) {
+            row.find('.resultsnumsrow').each((_, r) => {
+                const label = $(r).text();
+                if (/powerball|mega ball|bonus|cash ball/i.test(label)) {
+                    const val = $(r).find('li').first().text().trim();
+                    if (/^\d+$/.test(val)) {
+                        powerBall = val;
+                    }
+                }
+            });
+        }
+
+        // 2. Detect Main / White Balls (Exclude .multiplier and bonus ball)
         const numbers: string[] = [];
-        row.find('.resultsnums li').each((_, li) => {
-            numbers.push($(li).text().trim());
+        const firstRow = row.find('.resultsnumsrow').first();
+        const mainUl = firstRow.length > 0 ? firstRow.find('ul.resultsnums li') : row.find('ul.resultsnums li');
+
+        mainUl.each((_, li) => {
+            const el = $(li);
+            if (el.hasClass('multiplier') || el.hasClass('red') || el.hasClass('resultsbonus') || el.hasClass('bonus')) {
+                return;
+            }
+            const val = el.text().trim();
+            if (/^\d+$/.test(val)) {
+                numbers.push(val);
+            }
         });
 
-        // Jackpot (might be missing for pick 3)
+        // Jackpot
         const jackpot = row.find('.resultsJackpotAmount').text().trim() || null;
-
-        // Powerball/MegaBall (if any)
-        const powerBall = row.find('.resultsnumsrow .resultsbonus').text().trim() || null;
-        if (powerBall && numbers.length > 0) {
-            // Sometimes the bonus ball is in the list or separate. 
-            // In the HTML I saw, it was just <li> items. 
-            // If there was a separated ball it might have a different class.
-            // For now, let's assume all <li> are numbers.
-        }
 
         if (dateStr && numbers.length > 0) {
             const safeDateStr = `${dateStr.substring(0, 10)}T12:00:00Z`;
@@ -117,56 +120,72 @@ async function parseAndSaveHistory(html: string, gameId: string) {
                 gameId,
                 date: new Date(safeDateStr),
                 numbers,
-                jackpot
+                jackpot,
+                powerBall
             });
         }
     });
 
-    console.log(`Found ${resultsToSave.length} historical entries.`);
-
     if (resultsToSave.length === 0) {
-        console.log('No historical entries found.');
-        return;
+        return 0;
     }
 
-    // Bulk write for efficiency
     await connectToDatabase();
 
-    // We use insertMany with ordered:false to ignore duplicates but insert new ones
-    // Or iterate and upsert. Given our unique index, insertMany is fine if we ignore errors.
     try {
-        await Result.insertMany(resultsToSave, { ordered: false });
-        console.log(`Saved ${resultsToSave.length} results.`);
-    } catch (e: any) {
-        // Ignore duplicate key errors (code 11000)
-        if (e.code === 11000 || (e.writeErrors && e.writeErrors.some((err: any) => err.code === 11000))) {
-            console.log('Some results were duplicates and skipped.');
-        } else {
-            console.error('Error saving history:', e);
+        const bulkOps = resultsToSave.map(item => ({
+            updateOne: {
+                filter: { gameId: item.gameId, date: item.date },
+                update: {
+                    $set: {
+                        gameId: item.gameId,
+                        date: item.date,
+                        numbers: item.numbers,
+                        powerBall: item.powerBall,
+                        jackpot: item.jackpot
+                    }
+                },
+                upsert: true
+            }
+        }));
+
+        await Result.bulkWrite(bulkOps, { ordered: false });
+        console.log(`💾 Saved/Updated ${resultsToSave.length} clean draws in database.`);
+
+        // Also update Game document with latest draw info
+        const sorted = [...resultsToSave].sort((a, b) => b.date.getTime() - a.date.getTime());
+        const latest = sorted[0];
+        if (latest) {
+            const currentGame = await Game.findById(gameId);
+            if (currentGame && (!currentGame.lastDrawDate || new Date(latest.date) >= new Date(currentGame.lastDrawDate))) {
+                await Game.findByIdAndUpdate(gameId, {
+                    lastDrawDate: latest.date,
+                    numbers: latest.numbers,
+                    powerBall: latest.powerBall,
+                    ...(latest.jackpot ? { jackpot: latest.jackpot } : {})
+                });
+                console.log(`🔄 Updated ${currentGame.name} latest draw: ${latest.date.toISOString().split('T')[0]} -> ${latest.numbers.join('-')}${latest.powerBall ? ' ['+latest.powerBall+']' : ''}`);
+            }
         }
+    } catch (e: any) {
+        console.error('Error saving history batch:', e.message);
     }
+
+    return resultsToSave.length;
 }
 
 async function run() {
     await connectToDatabase();
 
-    // Get command line args for state/game
-    // Usage: npx tsx lottery-scraper/history_crawler.ts [state] [game]
-    // If no args, pick a random one or all? Let's do random one for testing.
-
     const args = process.argv.slice(2);
-
-    // Check for --year argument
     const yearArg = args.find(a => a.startsWith('--year='));
     const targetYear = yearArg ? parseInt(yearArg.split('=')[1]) : null;
 
-    // Filter out flags from args to get slug/game
     const cleanArgs = args.filter(a => !a.startsWith('--'));
 
     let query: any = { historyUrl: { $exists: true, $ne: '' } };
 
     if (cleanArgs.length >= 2) {
-        // args[0] = state, args[1] = game
         const stateSlug = cleanArgs[0];
         const gameSlug = cleanArgs[1];
         query = { stateSlug, slug: gameSlug };
@@ -175,47 +194,72 @@ async function run() {
     const game = await Game.findOne(query);
 
     if (!game) {
-        console.log('No games with historyUrl found (or specified game not found). Run state scraper first.');
+        console.log('No games matching query found. Run state crawler first.');
         process.exit(0);
     }
 
-    // Base URL usually: /results/az/pick3/past
     const baseUrl = game.historyUrl!;
+    console.log(`\n🎯 Target Game: ${game.name} (${game.stateSlug}) - Base: ${baseUrl}`);
 
-    if (targetYear) {
-        console.log(`📅 Scraping FULL YEAR ${targetYear} for ${game.name}...`);
+    const { browser, page } = await createBrowserSession();
 
-        // Loop through months 12 down to 1
-        for (let month = 12; month >= 1; month--) {
-            const monthUrl = `${baseUrl}/${targetYear}/${month}`;
-            const html = await fetchHistoryPage(monthUrl);
+    try {
+        if (targetYear) {
+            console.log(`📅 Scraping FULL YEAR ${targetYear} for ${game.name} (Using Persistent Browser Session)...`);
+            let totalYearDraws = 0;
+
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const maxMonth = targetYear === currentYear ? (now.getMonth() + 1) : 12;
+
+            // Loop through months maxMonth down to 1
+            for (let month = maxMonth; month >= 1; month--) {
+                const monthUrl = `${baseUrl}/${targetYear}/${month}`;
+                console.log(`\n⏳ Fetching Month ${month}/${targetYear}...`);
+                let html = await fetchPageWithSession(page, monthUrl);
+
+                if (!html) {
+                    console.log(`⚠️ Retry for Month ${month}/${targetYear}...`);
+                    await new Promise(r => setTimeout(r, 2000));
+                    html = await fetchPageWithSession(page, monthUrl);
+                }
+
+                if (html) {
+                    const saved = await parseAndSaveHistory(html, game._id.toString());
+                    totalYearDraws += saved;
+                } else {
+                    console.log(`ℹ️ Month ${month}/${targetYear} had no entries or reached game inception boundary.`);
+                }
+
+                // Brief cooldown between months
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            console.log(`\n🎉 Completed Year ${targetYear} for ${game.name}: ~${totalYearDraws} draws processed.`);
+        } else {
+            console.log(`Scraping recent history for ${game.name} (${game.stateSlug})...`);
+            const html = await fetchPageWithSession(page, baseUrl);
             if (html) {
                 await parseAndSaveHistory(html, game._id.toString());
             }
-            // Small delay between months
-            await new Promise(r => setTimeout(r, 2000));
         }
-    } else {
-        // Default behavior (Recent)
-        console.log(`Scraping recent history for ${game.name} (${game.stateSlug})...`);
-        const html = await fetchHistoryPage(baseUrl);
-        if (html) {
-            await parseAndSaveHistory(html, game._id.toString());
-        }
+    } finally {
+        await browser.close();
     }
 
     try {
-        console.log(`\n🧹 Automatic Cache Clear Triggered for /results/${game.stateSlug}/${game.slug}`);
         const secret = process.env.REVALIDATE_SECRET || 'master_cache_key_2026';
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-        
-        await fetch(`${baseUrl}/api/revalidate?path=/results/${game.stateSlug}/${game.slug}&secret=${secret}`).catch(() => {});
-        console.log('✅ Cache refreshed successfully.');
+        const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        await fetch(`${siteUrl}/api/revalidate?path=/results/${game.stateSlug}/${game.slug}&secret=${secret}`).catch(() => {});
+        console.log('✅ Next.js cache revalidated for game page.');
     } catch (err) {
-        console.error('⚠️ Failed to clear Next.js Cache. Ensure the server is running.', err);
+        // Safe to ignore if local server not running
     }
 
     process.exit(0);
 }
 
-run();
+run().catch((err) => {
+    console.error('Crawler error:', err);
+    process.exit(1);
+});
