@@ -3,9 +3,9 @@ name: Automated Live Lottery Sync
 on:
   schedule:
     # 1. Night National Jackpot Watcher (Powerball / Mega Millions / Lotto Max)
-    # 11:05 PM EST (04:05 UTC next day) - Mon, Wed, Sat (Powerball & Lotto America)
-    - cron: '5 4 * * 2,4,7'
-    # 11:05 PM EST (04:05 UTC next day) - Tue, Fri (Mega Millions & Lotto Max)
+    # 11:05 PM EST (04:05 UTC next day) - Mon, Wed, Sat nights (UTC: Tue, Thu, Sun -> 0,2,4)
+    - cron: '5 4 * * 0,2,4'
+    # 11:05 PM EST (04:05 UTC next day) - Tue, Fri nights (UTC: Wed, Sat -> 3,6)
     - cron: '5 4 * * 3,6'
 
     # 2. Entire Website All-States Sweeps (Midday & Evening)
@@ -31,7 +31,7 @@ jobs:
   # Job 1: 60s Live Watcher for High-Jackpot National Drawings
   # -------------------------------------------------------------
   national-watcher:
-    if: "${{ github.event.inputs.target == 'national_watcher' || github.event.inputs.target == 'national_instant_sync' || (github.event_name == 'schedule' && (github.event.schedule == '5 4 * * 2,4,7' || github.event.schedule == '5 4 * * 3,6')) }}"
+    if: "${{ github.event.inputs.target == 'national_watcher' || github.event.inputs.target == 'national_instant_sync' || (github.event_name == 'schedule' && (github.event.schedule == '5 4 * * 0,2,4' || github.event.schedule == '5 4 * * 3,6')) }}"
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
@@ -43,10 +43,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install Puppeteer Dependencies
         run: |
@@ -91,10 +90,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install Puppeteer Dependencies
         run: |
