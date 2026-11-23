@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { cache } from 'react';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -83,10 +83,10 @@ function resolveStateSlug(input: string): string {
   return clean;
 }
 
-export const revalidate = 0;
-export const dynamic = 'force-dynamic';
+// Cache state pages for 5 minutes (ISR) to keep process usage near 0
+export const revalidate = 300;
 
-async function getStateData(slug: string) {
+const getStateData = cache(async (slug: string) => {
     try {
         await connectToDatabase();
         const state = await State.findOne({ slug }).lean();
@@ -101,7 +101,7 @@ async function getStateData(slug: string) {
         console.error("Database connection failed:", error);
         return null;
     }
-}
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ stateSlug: string }> }) {
     const { stateSlug } = await params;

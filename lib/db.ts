@@ -33,9 +33,11 @@ async function connectToDatabase() {
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: true, // Allow buffering
-      serverSelectionTimeoutMS: 30000, // Increase timeout to 30s
-      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      bufferCommands: false, // Do not buffer if disconnected
+      maxPoolSize: 10, // Prevent runaway connections (shared hosting limit protection)
+      minPoolSize: 1,
+      serverSelectionTimeoutMS: 10000, // 10s max
+      socketTimeoutMS: 20000, // Close idle sockets after 20s
     };
 
     cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {

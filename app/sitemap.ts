@@ -4,6 +4,8 @@ import State from '@/models/State';
 import Game from '@/models/Game';
 import { CATEGORIES } from '@/lib/lotteryCategories';
 
+export const revalidate = 3600; // Cache sitemap for 1 hour to prevent DB connection spikes
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://allusalottery.com';
 

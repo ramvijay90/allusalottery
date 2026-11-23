@@ -84,9 +84,8 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   western: 'WES'
 };
 
-// Force absolute dynamic rendering for live tracking
-export const revalidate = 0;
-export const dynamic = 'force-dynamic';
+// Cache live results for 60 seconds (prevents process spikes under crawler traffic)
+export const revalidate = 60;
 
 export const metadata = {
     title: 'Live Lottery Results Today & Tonight\'s Winning Numbers 2026 | All States',

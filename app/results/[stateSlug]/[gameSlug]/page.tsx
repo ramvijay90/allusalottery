@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, ChevronLeft, ChevronRight, TrendingUp, Zap, Building2, Landmark, Clock, ShieldCheck, DollarSign, Award, ExternalLink } from 'lucide-react';
@@ -14,8 +15,8 @@ import BeforeContentAd from '@/components/ads/BeforeContentAd';
 import AfterContentAd from '@/components/ads/AfterContentAd';
 import { getStateLotteryDetails } from '@/lib/stateLotteryInfo';
 
-export const revalidate = 0;
-export const dynamic = 'force-dynamic';
+// Cache responses for 5 minutes (ISR) to keep server process count near 0
+export const revalidate = 300;
 
 const STATE_ALIASES: Record<string, string> = {
   arizona: 'az',
@@ -124,7 +125,7 @@ function resolveAliases(stateSlug: string, gameSlug: string) {
   return { resolvedState, resolvedGame };
 }
 
-async function getGameData(stateSlug: string, gameSlug: string) {
+const getGameData = cache(async (stateSlug: string, gameSlug: string) => {
     await connectToDatabase();
     const state = await State.findOne({ slug: stateSlug }).lean();
     if (!state) return null;
@@ -191,7 +192,7 @@ async function getGameData(stateSlug: string, gameSlug: string) {
         siblingGames: JSON.parse(JSON.stringify(siblingGames)),
         cutoffDate: cutoffDate.toISOString()
     };
-}
+});
 
 export async function generateMetadata({ params }: { params: Promise<{ stateSlug: string, gameSlug: string }> }) {
     const { stateSlug, gameSlug } = await params;

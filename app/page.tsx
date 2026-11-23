@@ -65,6 +65,9 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   western: 'WES'
 };
 
+// Cache homepage for 5 minutes (ISR) to keep process usage minimal
+export const revalidate = 300;
+
 // Fetch states from DB for the homepage
 async function getStates(country?: string) {
   try {
@@ -146,9 +149,6 @@ async function getTopJackpots() {
     ];
   }
 }
-
-export const revalidate = 0;
-export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'USA Lottery Results Today & Winning Numbers 2026 | All States Live',
