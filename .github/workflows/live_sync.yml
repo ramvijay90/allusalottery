@@ -60,6 +60,9 @@ jobs:
         if: "${{ github.event.inputs.target == 'national_watcher' || github.event_name == 'schedule' }}"
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          SCRAPER_PROXY: ${{ secrets.SCRAPER_PROXY }}
+          SCRAPER_PROXY_USERNAME: ${{ secrets.SCRAPER_PROXY_USERNAME }}
+          SCRAPER_PROXY_PASSWORD: ${{ secrets.SCRAPER_PROXY_PASSWORD }}
         run: |
           npx tsx lottery-scraper/live_watcher.ts
 
@@ -67,6 +70,9 @@ jobs:
         if: "${{ github.event.inputs.target == 'national_instant_sync' }}"
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          SCRAPER_PROXY: ${{ secrets.SCRAPER_PROXY }}
+          SCRAPER_PROXY_USERNAME: ${{ secrets.SCRAPER_PROXY_USERNAME }}
+          SCRAPER_PROXY_PASSWORD: ${{ secrets.SCRAPER_PROXY_PASSWORD }}
         run: |
           npx tsx lottery-scraper/national_sync.ts --year=$(date +%Y) --force
 
@@ -106,5 +112,8 @@ jobs:
       - name: Run Sharded Batch Scraper (${{ matrix.shard }})
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          SCRAPER_PROXY: ${{ secrets.SCRAPER_PROXY }}
+          SCRAPER_PROXY_USERNAME: ${{ secrets.SCRAPER_PROXY_USERNAME }}
+          SCRAPER_PROXY_PASSWORD: ${{ secrets.SCRAPER_PROXY_PASSWORD }}
         run: |
           npx tsx lottery-scraper/batch_runner.ts --shard=${{ matrix.shard }}
