@@ -79,145 +79,167 @@ async function runNationalSync() {
     await connectToDatabase();
 
     const args = process.argv.slice(2);
+    const fromArg = args.find(a => a.startsWith('--from='));
+    const toArg = args.find(a => a.startsWith('--to='));
     const yearArg = args.find(a => a.startsWith('--year='));
-    const targetYear = yearArg ? parseInt(yearArg.split('=')[1]) : 2026;
     const forceCrawl = args.includes('--force');
 
-    console.log(`📅 Target Year: ${targetYear}`);
-    console.log(`🎯 Master Games: ${NATIONAL_MASTERS.map(m => m.name).join(', ')}\n`);
-
-    const startDate = new Date(`${targetYear}-01-01T00:00:00Z`);
-    const endDate = new Date(`${targetYear}-12-31T23:59:59Z`);
-
-    let totalSyncedGames = 0;
-    let totalSyncedDraws = 0;
-
-    for (const master of NATIONAL_MASTERS) {
-        console.log(`\n------------------------------------------------------------`);
-        console.log(`🏆 Processing Master: ${master.name} (${master.stateSlug.toUpperCase()})`);
-        console.log(`------------------------------------------------------------`);
-
-        const masterGame = await Game.findOne({ stateSlug: master.stateSlug, slug: master.slug });
-
-        if (!masterGame) {
-            console.error(`❌ Master game not found in database: ${master.stateSlug}/${master.slug}`);
-            continue;
+    let targetYears: number[] = [];
+    if (fromArg && toArg) {
+        const from = parseInt(fromArg.split('=')[1]);
+        const to = parseInt(toArg.split('=')[1]);
+        for (let y = to; y >= from; y--) {
+            targetYears.push(y);
         }
-
-        // Check if master already has data for this year
-        const existingCount = await Result.countDocuments({
-            gameId: masterGame._id,
-            date: { $gte: startDate, $lte: endDate }
-        });
-
-        const latestDrawInDb = await Result.findOne({
-            gameId: masterGame._id,
-            date: { $gte: startDate, $lte: endDate }
-        }).sort({ date: -1 });
-
-        const daysSinceLastDraw = latestDrawInDb 
-            ? (Date.now() - new Date(latestDrawInDb.date).getTime()) / (1000 * 60 * 60 * 24) 
-            : 999;
-        
-        // Needs crawling if we don't have today/yesterday's draw, count is low, or forced
-        const needsCrawl = existingCount < 50 || daysSinceLastDraw >= 0.8 || forceCrawl;
-
-        console.log(`📊 Current master draws in DB for ${targetYear}: ${existingCount} (Latest: ${latestDrawInDb ? latestDrawInDb.date.toISOString().split('T')[0] : 'None'})`);
-
-        if (needsCrawl) {
-            console.log(`⏳ Crawling complete ${targetYear} history for ${master.name}...`);
-            await runCrawler(master.stateSlug, master.slug, targetYear);
-        } else {
-            console.log(`✅ Master already has up-to-date data (${existingCount} draws). Skipping web crawl.`);
-        }
-
-        // Fetch all draws for the master game for this year
-        const masterDraws = await Result.find({
-            gameId: masterGame._id,
-            date: { $gte: startDate, $lte: endDate }
-        }).lean();
-
-        if (masterDraws.length === 0) {
-            console.log(`⚠️ No draws found for master ${master.name} in ${targetYear}. Skipping sync.`);
-            continue;
-        }
-
-        // Identify latest draw for Game model updates
-        const sortedDraws = [...masterDraws].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        const latestDraw = sortedDraws[0];
-
-        if (latestDraw) {
-            await Game.findByIdAndUpdate(masterGame._id, {
-                lastDrawDate: latestDraw.date,
-                numbers: latestDraw.numbers,
-                powerBall: latestDraw.powerBall,
-                ...(latestDraw.jackpot ? { jackpot: latestDraw.jackpot } : {})
-            });
-            console.log(`🔄 Updated master ${master.name} latest draw: ${latestDraw.date.toISOString().split('T')[0]} -> ${latestDraw.numbers.join('-')} [${latestDraw.powerBall}]`);
-        }
-
-        console.log(`📦 Found ${masterDraws.length} verified draws for ${master.name}. Propagating to all states...`);
-
-        // Find all sibling games across other states matching this game
-        const siblingGames = await Game.find({
-            _id: { $ne: masterGame._id },
-            name: master.matchRegex
-        });
-
-        console.log(`📍 Found ${siblingGames.length} sibling state instances to synchronize.`);
-
-        const syncStart = Date.now();
-        let syncedCount = 0;
-
-        for (const sibling of siblingGames) {
-            const bulkOps = masterDraws.map((d: any) => ({
-                updateOne: {
-                    filter: { gameId: sibling._id, date: d.date },
-                    update: {
-                        $set: {
-                            gameId: sibling._id,
-                            date: d.date,
-                            numbers: d.numbers,
-                            powerBall: d.powerBall,
-                            jackpot: d.jackpot
-                        }
-                    },
-                    upsert: true
-                }
-            }));
-
-            if (bulkOps.length > 0) {
-                try {
-                    await Result.bulkWrite(bulkOps, { ordered: false });
-                    
-                    // Also update Game document for homepage cards & headers
-                    if (latestDraw) {
-                        await Game.findByIdAndUpdate(sibling._id, {
-                            lastDrawDate: latestDraw.date,
-                            numbers: latestDraw.numbers,
-                            powerBall: latestDraw.powerBall,
-                            ...(latestDraw.jackpot ? { jackpot: latestDraw.jackpot } : {})
-                        });
-                    }
-                    syncedCount++;
-                } catch (err: any) {
-                    console.error(`⚠️ Error syncing ${sibling.stateSlug}/${sibling.slug}:`, err.message);
-                }
-            }
-        }
-
-        const elapsed = ((Date.now() - syncStart) / 1000).toFixed(2);
-        console.log(`✨ Successfully synchronized ${masterDraws.length} draws to ${syncedCount} state games in ${elapsed}s!`);
-
-        totalSyncedGames += syncedCount;
-        totalSyncedDraws += masterDraws.length * syncedCount;
+    } else if (yearArg) {
+        targetYears = [parseInt(yearArg.split('=')[1])];
+    } else {
+        targetYears = [2026];
     }
 
-    console.log(`\n============================================================`);
-    console.log(`🎉 NATIONAL SYNC COMPLETE FOR YEAR ${targetYear}!`);
-    console.log(`📊 Total State Games Updated: ${totalSyncedGames}`);
-    console.log(`💾 Total Draws Propagated: ~${totalSyncedDraws}`);
-    console.log(`============================================================\n`);
+    console.log(`📅 Target Years: ${targetYears.join(', ')}`);
+    console.log(`🎯 Master Games: ${NATIONAL_MASTERS.map(m => m.name).join(', ')}\n`);
+
+    for (const targetYear of targetYears) {
+        console.log(`\n============================================================`);
+        console.log(`⚡ SYNCING NATIONAL ARCHIVE FOR YEAR: ${targetYear}`);
+        console.log(`============================================================`);
+
+        const startDate = new Date(`${targetYear}-01-01T00:00:00Z`);
+        const endDate = new Date(`${targetYear}-12-31T23:59:59Z`);
+
+        let totalSyncedGames = 0;
+        let totalSyncedDraws = 0;
+
+        for (const master of NATIONAL_MASTERS) {
+            console.log(`\n------------------------------------------------------------`);
+            console.log(`🏆 Processing Master: ${master.name} (${master.stateSlug.toUpperCase()}) - ${targetYear}`);
+            console.log(`------------------------------------------------------------`);
+
+            const masterGame = await Game.findOne({ stateSlug: master.stateSlug, slug: master.slug });
+
+            if (!masterGame) {
+                console.error(`❌ Master game not found in database: ${master.stateSlug}/${master.slug}`);
+                continue;
+            }
+
+            // Check if master already has data for this year
+            const existingCount = await Result.countDocuments({
+                gameId: masterGame._id,
+                date: { $gte: startDate, $lte: endDate }
+            });
+
+            const latestDrawInDb = await Result.findOne({
+                gameId: masterGame._id,
+                date: { $gte: startDate, $lte: endDate }
+            }).sort({ date: -1 });
+
+            const daysSinceLastDraw = latestDrawInDb 
+                ? (Date.now() - new Date(latestDrawInDb.date).getTime()) / (1000 * 60 * 60 * 24) 
+                : 999;
+            
+            // Needs crawling if we don't have enough draws or forced
+            const isCurrentYear = targetYear === new Date().getFullYear();
+            const minExpectedDraws = isCurrentYear ? 50 : 90;
+            const needsCrawl = existingCount < minExpectedDraws || (isCurrentYear && daysSinceLastDraw >= 0.8) || forceCrawl;
+
+            console.log(`📊 Current master draws in DB for ${targetYear}: ${existingCount} (Latest: ${latestDrawInDb ? latestDrawInDb.date.toISOString().split('T')[0] : 'None'})`);
+
+            if (needsCrawl) {
+                console.log(`⏳ Crawling complete ${targetYear} history for ${master.name}...`);
+                await runCrawler(master.stateSlug, master.slug, targetYear);
+            } else {
+                console.log(`✅ Master already has complete data (${existingCount} draws). Skipping web crawl.`);
+            }
+
+            // Fetch all draws for the master game for this year
+            const masterDraws = await Result.find({
+                gameId: masterGame._id,
+                date: { $gte: startDate, $lte: endDate }
+            }).lean();
+
+            if (masterDraws.length === 0) {
+                console.log(`⚠️ No draws found for master ${master.name} in ${targetYear}. Skipping sync.`);
+                continue;
+            }
+
+            // Identify latest draw for Game model updates
+            const sortedDraws = [...masterDraws].sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            const latestDraw = sortedDraws[0];
+
+            if (latestDraw && isCurrentYear) {
+                await Game.findByIdAndUpdate(masterGame._id, {
+                    lastDrawDate: latestDraw.date,
+                    numbers: latestDraw.numbers,
+                    powerBall: latestDraw.powerBall,
+                    ...(latestDraw.jackpot ? { jackpot: latestDraw.jackpot } : {})
+                });
+                console.log(`🔄 Updated master ${master.name} latest draw: ${latestDraw.date.toISOString().split('T')[0]} -> ${latestDraw.numbers.join('-')} [${latestDraw.powerBall}]`);
+            }
+
+            console.log(`📦 Found ${masterDraws.length} verified draws for ${master.name}. Propagating to all states...`);
+
+            // Find all sibling games across other states matching this game
+            const siblingGames = await Game.find({
+                _id: { $ne: masterGame._id },
+                name: master.matchRegex
+            });
+
+            console.log(`📍 Found ${siblingGames.length} sibling state instances to synchronize.`);
+
+            const syncStart = Date.now();
+            let syncedCount = 0;
+
+            for (const sibling of siblingGames) {
+                const bulkOps = masterDraws.map((d: any) => ({
+                    updateOne: {
+                        filter: { gameId: sibling._id, date: d.date },
+                        update: {
+                            $set: {
+                                gameId: sibling._id,
+                                date: d.date,
+                                numbers: d.numbers,
+                                powerBall: d.powerBall,
+                                jackpot: d.jackpot
+                            }
+                        },
+                        upsert: true
+                    }
+                }));
+
+                if (bulkOps.length > 0) {
+                    try {
+                        await Result.bulkWrite(bulkOps, { ordered: false });
+                        
+                        // Also update Game document for homepage cards & headers
+                        if (latestDraw && isCurrentYear) {
+                            await Game.findByIdAndUpdate(sibling._id, {
+                                lastDrawDate: latestDraw.date,
+                                numbers: latestDraw.numbers,
+                                powerBall: latestDraw.powerBall,
+                                ...(latestDraw.jackpot ? { jackpot: latestDraw.jackpot } : {})
+                            });
+                        }
+                        syncedCount++;
+                    } catch (err: any) {
+                        console.error(`⚠️ Error syncing ${sibling.stateSlug}/${sibling.slug}:`, err.message);
+                    }
+                }
+            }
+
+            const elapsed = ((Date.now() - syncStart) / 1000).toFixed(2);
+            console.log(`✨ Successfully synchronized ${masterDraws.length} draws to ${syncedCount} state games in ${elapsed}s!`);
+
+            totalSyncedGames += syncedCount;
+            totalSyncedDraws += masterDraws.length * syncedCount;
+        }
+
+        console.log(`\n============================================================`);
+        console.log(`🎉 NATIONAL SYNC COMPLETE FOR YEAR ${targetYear}!`);
+        console.log(`📊 Total State Games Updated: ${totalSyncedGames}`);
+        console.log(`💾 Total Draws Propagated: ~${totalSyncedDraws}`);
+        console.log(`============================================================\n`);
+    }
 
     process.exit(0);
 }

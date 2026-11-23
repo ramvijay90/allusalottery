@@ -83,7 +83,16 @@ async function runBatch() {
             /powerball|mega millions|lotto max|lotto 6[\/-]?49|lotto america/i.test(g.name);
 
         if (topOnly) {
-            allGames = allGames.filter(isNational);
+            console.log('⚡ Delegating to High-Speed National Sync Engine (Avoids 99x duplicate crawling)...');
+            const npxCmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+            const yearParams = fromArg && toArg ? `${fromArg} ${toArg}` : (yearArg || '--year=2025');
+            const cmd = `${npxCmd} tsx lottery-scraper/national_sync.ts ${yearParams}`;
+            console.log(`🚀 Executing: ${cmd}`);
+            const child = exec(cmd, { cwd: process.cwd() });
+            child.stdout?.pipe(process.stdout);
+            child.stderr?.pipe(process.stderr);
+            child.on('exit', (code) => process.exit(code || 0));
+            return;
         } else if (localOnly) {
             allGames = allGames.filter(g => !isNational(g));
         }
