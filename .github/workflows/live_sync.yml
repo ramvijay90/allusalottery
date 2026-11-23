@@ -2,28 +2,38 @@ name: Automated Live Lottery Sync
 
 on:
   schedule:
-    # 11:05 PM EST (04:05 UTC next day) - Mon, Wed, Sat (Powerball & Lotto America Draw Watcher)
+    # 1. Night National Jackpot Watcher (Powerball / Mega Millions / Lotto Max)
+    # 11:05 PM EST (04:05 UTC next day) - Mon, Wed, Sat (Powerball & Lotto America)
     - cron: '5 4 * * 2,4,7'
-    # 11:05 PM EST (04:05 UTC next day) - Tue, Fri (Mega Millions & Lotto Max Draw Watcher)
+    # 11:05 PM EST (04:05 UTC next day) - Tue, Fri (Mega Millions & Lotto Max)
     - cron: '5 4 * * 3,6'
-    # 1:15 PM EST (18:15 UTC) - Daily Midday Pick 3 / Pick 4 drawings
-    - cron: '15 18 * * *'
+
+    # 2. Entire Website All-States Sweeps (Midday & Evening)
+    # 1:30 PM EST (18:30 UTC) - All Midday Pick 3 / Pick 4 drawings across USA & Canada
+    - cron: '30 18 * * *'
+    # 7:30 PM EST (00:30 UTC next day) - All Evening Pick 3, Pick 4, Cash 5 drawings
+    - cron: '30 0 * * *'
+
   workflow_dispatch:
     inputs:
       target:
-        description: 'Sync Mode'
+        description: 'Select Sync Mode'
         required: true
-        default: 'watcher'
+        default: 'national_watcher'
         type: choice
         options:
-          - 'watcher'
-          - 'national'
-          - 'all_states'
+          - 'national_watcher'
+          - 'entire_site_shards'
+          - 'national_instant_sync'
 
 jobs:
-  live-sync:
+  # -------------------------------------------------------------
+  # Job 1: 60s Live Watcher for High-Jackpot National Drawings
+  # -------------------------------------------------------------
+  national-watcher:
+    if: "${{ github.event.inputs.target == 'national_watcher' || github.event.inputs.target == 'national_instant_sync' || (github.event_name == 'schedule' && (github.event.schedule == '5 4 * * 2,4,7' || github.event.schedule == '5 4 * * 3,6')) }}"
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 40
 
     steps:
       - name: Checkout Code
@@ -47,23 +57,56 @@ jobs:
             libpango-1.0-0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
             libxkbcommon0 fonts-liberation
 
-      - name: Run Instant Live Watcher (Polls every 60s until source publishes)
-        if: "${{ github.event.inputs.target == 'watcher' || github.event_name == 'schedule' }}"
+      - name: Run 60s Live Watcher
+        if: "${{ github.event.inputs.target == 'national_watcher' || github.event_name == 'schedule' }}"
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: |
           npx tsx lottery-scraper/live_watcher.ts
 
-      - name: Run National Sync (Full manual sync across all 50 states)
-        if: "${{ github.event.inputs.target == 'national' }}"
+      - name: Run Forced Instant Sync (Single Pass)
+        if: "${{ github.event.inputs.target == 'national_instant_sync' }}"
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: |
           npx tsx lottery-scraper/national_sync.ts --year=$(date +%Y) --force
 
-      - name: Run All States Crawler (Full site crawl)
-        if: "${{ github.event.inputs.target == 'all_states' }}"
+  # -------------------------------------------------------------
+  # Job 2: Entire Website All-States 4-Shard Parallel Sweep
+  # -------------------------------------------------------------
+  entire-site-sweep:
+    if: "${{ github.event.inputs.target == 'entire_site_shards' || (github.event_name == 'schedule' && (github.event.schedule == '30 18 * * *' || github.event.schedule == '30 0 * * *')) }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/4', '2/4', '3/4', '4/4'] # 4 runners execute at the exact same second in parallel
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Puppeteer Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2 libatk-bridge2.0-0 libatk1.0-0 libcairo2 libcups2 \
+            libdbus-1-3 libdrm2 libgbm1 libglib2.0-0 libnspr4 libnss3 \
+            libpango-1.0-0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+            libxkbcommon0 fonts-liberation
+
+      - name: Run Sharded Batch Scraper (${{ matrix.shard }})
         env:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
         run: |
-          npm run scrape:all
+          npx tsx lottery-scraper/batch_runner.ts --shard=${{ matrix.shard }}
