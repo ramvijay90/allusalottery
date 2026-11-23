@@ -119,8 +119,8 @@ async function runNationalSync() {
             ? (Date.now() - new Date(latestDrawInDb.date).getTime()) / (1000 * 60 * 60 * 24) 
             : 999;
         
-        // Needs crawling if we don't have fresh November draws or count is too low
-        const needsCrawl = existingCount < 100 || daysSinceLastDraw > 7 || forceCrawl;
+        // Needs crawling if we don't have today/yesterday's draw, count is low, or forced
+        const needsCrawl = existingCount < 50 || daysSinceLastDraw >= 0.8 || forceCrawl;
 
         console.log(`📊 Current master draws in DB for ${targetYear}: ${existingCount} (Latest: ${latestDrawInDb ? latestDrawInDb.date.toISOString().split('T')[0] : 'None'})`);
 
