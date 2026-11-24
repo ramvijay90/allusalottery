@@ -6,9 +6,9 @@ export const contentType = 'image/png';
 
 export default async function Image() {
   return renderLottoOgImage({
-    badge: '🇺🇸 Official USA & Canada Lottery Hub',
-    title: 'USA Lottery Results & Winning Numbers',
-    subtitle: 'Powerball • Mega Millions • Lotto Max • 50 State Lotteries',
+    badge: '🌐 Official Lottery Results Hub',
+    title: 'Live Lottery Results & Winning Numbers',
+    subtitle: 'USA • Canada • Australia • 50+ States & Jackpots',
     pills: ['Live Draws', 'Jackpot Estimates', 'Draw Archives'],
   });
 }
