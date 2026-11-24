@@ -77,7 +77,20 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   ontario: 'ON',
   quebec: 'QC',
   westerncanada: 'WC',
-  western: 'WC'
+  western: 'WC',
+  eu: 'EU',
+  uk: 'UK',
+  'uk-eng': 'ENG',
+  'uk-sct': 'SCT',
+  'uk-wls': 'WLS',
+  'uk-nir': 'NIR',
+  ie: 'IE',
+  es: 'ES',
+  'es-cat': 'CAT',
+  it: 'IT',
+  fr: 'FR',
+  'eu-de': 'GER',
+  'de-by': 'BAY'
 };
 
 function resolveStateSlug(input: string): string {

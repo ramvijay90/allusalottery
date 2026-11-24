@@ -9,7 +9,7 @@ export default async function Image() {
   return renderLottoOgImage({
     badge: '🌐 Official Lottery Results Hub',
     title: 'Live Lottery Results & Winning Numbers',
-    subtitle: 'USA • Canada • Australia • 50+ States & Jackpots',
+    subtitle: 'USA • Canada • Australia • UK & Europe • All States & Jackpots',
     pills: ['Live Draws', 'Jackpot Estimates', 'Draw Archives'],
   });
 }

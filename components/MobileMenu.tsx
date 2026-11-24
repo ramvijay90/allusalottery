@@ -49,6 +49,9 @@ export default function MobileMenu() {
             <Link href="/?country=Australia#states" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
               Australia States
             </Link>
+            <Link href="/?country=Europe#states" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
+              UK & Europe Lotteries
+            </Link>
             <Link href="/lucky-number-generator" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
               Lucky Number
             </Link>

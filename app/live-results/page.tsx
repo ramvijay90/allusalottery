@@ -21,7 +21,7 @@ function cleanJackpot(jackpotStr?: string): string {
     if (/^CA(?!\$)/i.test(res)) res = res.replace(/^CA/i, 'CA$');
     return res;
   }
-  const usMatch = text.match(/(?:US\s?\$?|\$)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
+  const usMatch = text.match(/(?:US\s?\$?|AU\s?\$?|\$|£|€)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
   if (usMatch && usMatch[0].length >= 2) return usMatch[0].trim();
   const millionMatch = text.match(/[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
   if (millionMatch) return `$${millionMatch[0].trim()}`;
@@ -81,15 +81,34 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   bc: 'BC',
   ontario: 'ON',
   quebec: 'QC',
-  western: 'WES'
+  western: 'WES',
+  'au-nsw': 'NSW',
+  'au-vic': 'VIC',
+  'au-qld': 'QLD',
+  'au-wa': 'WA',
+  'au-sa': 'SA',
+  'au-tas': 'TAS',
+  eu: 'EU',
+  uk: 'UK',
+  'uk-eng': 'ENG',
+  'uk-sct': 'SCT',
+  'uk-wls': 'WLS',
+  'uk-nir': 'NIR',
+  ie: 'IE',
+  es: 'ES',
+  'es-cat': 'CAT',
+  it: 'IT',
+  fr: 'FR',
+  'eu-de': 'GER',
+  'de-by': 'BAY'
 };
 
 // Cache live results for 60 seconds (prevents process spikes under crawler traffic)
 export const revalidate = 60;
 
 export const metadata = {
-    title: 'Live Lottery Results Today & Tonight\'s Winning Numbers 2026 | All States',
-    description: 'Track official live lottery results today and tonight\'s winning numbers from 50 US States, Canada, and multi-state drawings like Powerball and Mega Millions live.',
+    title: 'Live Lottery Results Today & Tonight\'s Winning Numbers 2026 | Global Live',
+    description: 'Track official live lottery results today and tonight\'s winning numbers from USA 50 States, Canada, Australia, UK, and Europe lotteries live.',
     alternates: {
         canonical: 'https://allusalottery.com/live-results',
     },

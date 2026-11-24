@@ -68,7 +68,20 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   'au-qld': 'QLD',
   'au-wa': 'WA',
   'au-sa': 'SA',
-  'au-tas': 'TAS'
+  'au-tas': 'TAS',
+  eu: 'EU',
+  uk: 'UK',
+  'uk-eng': 'ENG',
+  'uk-sct': 'SCT',
+  'uk-wls': 'WLS',
+  'uk-nir': 'NIR',
+  ie: 'IE',
+  es: 'ES',
+  'es-cat': 'CAT',
+  it: 'IT',
+  fr: 'FR',
+  'eu-de': 'GER',
+  'de-by': 'BAY'
 };
 
 // Cache homepage for 5 minutes (ISR) to keep process usage minimal
@@ -87,11 +100,13 @@ async function getStates(country?: string) {
         query.country = 'Canada';
       } else if (country.toLowerCase() === 'australia') {
         query.country = 'Australia';
+      } else if (country.toLowerCase() === 'europe' || country.toLowerCase() === 'uk') {
+        query.country = 'Europe';
       } else {
         query.country = country;
       }
     } else {
-      query.country = { $in: ['US', 'Canada', 'Australia'] };
+      query.country = { $in: ['US', 'Canada', 'Australia', 'Europe'] };
     }
     
     // Sort by name

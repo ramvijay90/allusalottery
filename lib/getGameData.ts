@@ -62,7 +62,33 @@ export const STATE_ALIASES: Record<string, string> = {
   'au-qld': 'au-qld',
   'au-wa': 'au-wa',
   'au-sa': 'au-sa',
-  'au-tas': 'au-tas'
+  'au-tas': 'au-tas',
+  eu: 'eu',
+  europe: 'eu',
+  uk: 'uk',
+  unitedkingdom: 'uk',
+  'uk-eng': 'uk-eng',
+  england: 'uk-eng',
+  'uk-sct': 'uk-sct',
+  scotland: 'uk-sct',
+  'uk-wls': 'uk-wls',
+  wales: 'uk-wls',
+  'uk-nir': 'uk-nir',
+  northernireland: 'uk-nir',
+  ie: 'ie',
+  ireland: 'ie',
+  es: 'es',
+  spain: 'es',
+  'es-cat': 'es-cat',
+  catalonia: 'es-cat',
+  it: 'it',
+  italy: 'it',
+  fr: 'fr',
+  france: 'fr',
+  'eu-de': 'eu-de',
+  germany: 'eu-de',
+  'de-by': 'de-by',
+  bavaria: 'de-by'
 };
 
 export const GAME_ALIASES: Record<string, string> = {
@@ -89,7 +115,7 @@ export function cleanJackpot(jackpotStr?: string): string {
     return res;
   }
 
-  const usMatch = text.match(/(?:US\s?\$?|AU\s?\$?|\$)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
+  const usMatch = text.match(/(?:US\s?\$?|AU\s?\$?|\$|£|€)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
   if (usMatch && usMatch[0].length >= 2) {
     return usMatch[0].trim();
   }
