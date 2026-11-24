@@ -74,6 +74,14 @@ const FEED_CONFIGS = [
     {
         url: 'https://www.lotteryextreme.com/lotto_de/',
         label: 'Germany Feed'
+    },
+    {
+        url: 'https://www.lotteryextreme.com/el-gordo-de-la-primitiva/',
+        label: 'Spain El Gordo'
+    },
+    {
+        url: 'https://www.lotteryextreme.com/lototurf/',
+        label: 'Spain Lototurf'
     }
 ];
 
@@ -153,6 +161,16 @@ const GAME_ROUTING: { pattern: RegExp; targetSlug: string; stateSlugs: string[] 
     {
         pattern: /bonoloto/i,
         targetSlug: 'bonoloto',
+        stateSlugs: ['es', 'es-cat']
+    },
+    {
+        pattern: /gordo/i,
+        targetSlug: 'el-gordo',
+        stateSlugs: ['es', 'es-cat']
+    },
+    {
+        pattern: /lototurf/i,
+        targetSlug: 'lototurf',
         stateSlugs: ['es', 'es-cat']
     },
     // Italy Games

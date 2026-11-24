@@ -60,7 +60,7 @@ const AU_GAME_MAPPINGS: { pattern: RegExp; targetSlug: string; stateSlugs: strin
         // Millionaire Medley
         pattern: /^millionaire\s*medley/i,
         targetSlug: 'millionaire-medley',
-        stateSlugs: ['au-nsw', 'au-vic', 'au-qld', 'au-tas']
+        stateSlugs: ['au-nsw', 'au-vic', 'au-qld', 'au-tas', 'au-sa']
     }
 ];
 
