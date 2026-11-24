@@ -16,6 +16,7 @@ interface GameChartAnalyticsProps {
   stateName: string;
   gameId: string;
   cutoffDate: string;
+  defaultTab?: 'latest' | 'monthly' | 'weekly' | 'yearly' | 'pending' | 'frequency' | 'table';
 }
 
 // Timezone: America/New_York (Eastern Time) matches the official draw time for US & Canadian national lotteries
@@ -89,6 +90,7 @@ export default function GameChartAnalytics({
   stateName,
   gameId,
   cutoffDate,
+  defaultTab = 'latest',
 }: GameChartAnalyticsProps) {
   const [history, setHistory] = useState<HistoryItem[]>(() =>
     (initialHistory || []).map((item) => ({
@@ -110,7 +112,7 @@ export default function GameChartAnalytics({
       );
     }
   }, [initialHistory]);
-  const [activeTab, setActiveTab] = useState<'latest' | 'monthly' | 'weekly' | 'yearly' | 'pending' | 'frequency' | 'table'>('latest');
+  const [activeTab, setActiveTab] = useState<'latest' | 'monthly' | 'weekly' | 'yearly' | 'pending' | 'frequency' | 'table'>(defaultTab);
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedWeekday, setSelectedWeekday] = useState<string>('all');

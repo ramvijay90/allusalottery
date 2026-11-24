@@ -81,11 +81,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       numbers: { $exists: true, $not: { $size: 0 } }
     }).lean();
     for (const game of games) {
+      const lastMod = game.lastDrawDate ? new Date(game.lastDrawDate) : defaultLastModified;
+      // 1. Primary Game Results Hub
       entries.push({
         url: `${baseUrl}/results/${game.stateSlug}/${game.slug}`,
-        lastModified: game.lastDrawDate ? new Date(game.lastDrawDate) : defaultLastModified,
+        lastModified: lastMod,
         changeFrequency: 'daily',
-        priority: 0.8,
+        priority: 0.85,
+      });
+      // 2. Dedicated Past History Archive
+      entries.push({
+        url: `${baseUrl}/results/${game.stateSlug}/${game.slug}/history`,
+        lastModified: lastMod,
+        changeFrequency: 'daily',
+        priority: 0.75,
+      });
+      // 3. Dedicated 2026 Visual Chart & Analytics
+      entries.push({
+        url: `${baseUrl}/results/${game.stateSlug}/${game.slug}/chart`,
+        lastModified: lastMod,
+        changeFrequency: 'weekly',
+        priority: 0.75,
       });
     }
   } catch (error) {

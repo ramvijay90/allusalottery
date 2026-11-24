@@ -9,6 +9,7 @@ import Result from '@/models/Result';
 import GameChartAnalytics from '@/components/GameChartAnalytics';
 import ChartImagePreview from '@/components/ChartImagePreview';
 import LotteryChartNavigation from '@/components/LotteryChartNavigation';
+import GameSubNav from '@/components/GameSubNav';
 import MultiplexAd from '@/components/ads/MultiplexAd';
 import SidebarAd from '@/components/ads/SidebarAd';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
@@ -432,6 +433,9 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
             <main className="flex-1 w-full min-w-0 max-w-6xl mx-auto space-y-8">
                 {/* Visual Chart Navigation Hub (Like Klsite) */}
                 <LotteryChartNavigation stateSlug={state.slug} gameSlug={game.slug} country={state.country} />
+
+                {/* 3-Tab Section Navigation (Latest, History, Chart) */}
+                <GameSubNav stateSlug={state.slug} gameSlug={game.slug} currentSection="main" />
 
                 <div className="mb-12">
                     <Link href={`/results/${state.slug}`} className="text-slate-400 hover:text-[#0f172a] text-xs font-bold uppercase tracking-widest mb-4 inline-flex items-center gap-1 transition-colors">
