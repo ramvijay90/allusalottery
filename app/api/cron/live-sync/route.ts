@@ -2,9 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Game from '@/models/Game';
 import Result from '@/models/Result';
+import { syncOfficialPowerball, syncOfficialMegaMillions, syncOfficialCash4Life } from '@/lib/scrapers/officialNationalScraper';
+import { scrapeCanadaLotteries } from '@/lib/scrapers/canadaScraper';
+import { scrapeStateFromLotteryUsa } from '@/lib/scrapers/lotteryUsaScraper';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30; // Max 30s timeout
+export const maxDuration = 45; // Max 45s within Hostinger 50s limit
+
+// High-priority state rotation groups
+const STATE_BATCHES = [
+    ['az', 'ca', 'fl', 'tx', 'ny'], // Batch 0 (:00)
+    ['il', 'ga', 'nc', 'pa', 'oh'], // Batch 1 (:15)
+    ['mi', 'nj', 'va', 'wa', 'tn'], // Batch 2 (:30)
+    ['ma', 'md', 'co', 'mn', 'in'], // Batch 3 (:45)
+];
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -16,40 +27,71 @@ export async function GET(request: NextRequest) {
     }
 
     const startTime = Date.now();
+    const specificState = searchParams.get('state'); // e.g. ?state=az or ?state=all
+    const skipStates = searchParams.get('skip_states') === 'true';
 
     try {
         await connectToDatabase();
 
-        // 1. Fetch current active master games count
+        // 1. Sync Official National Games & Canada Lotteries
+        const [pbSync, mmSync, c4lSync, canadaSync] = await Promise.all([
+            syncOfficialPowerball(),
+            syncOfficialMegaMillions(),
+            syncOfficialCash4Life(),
+            scrapeCanadaLotteries()
+        ]);
+
+        const nationalUpdates = [pbSync, mmSync, c4lSync].filter(Boolean);
+
+        // 2. Sync Local State Games from LotteryUSA
+        const stateResults: any[] = [];
+
+        if (!skipStates) {
+            let targetStates: string[] = [];
+
+            if (specificState) {
+                if (specificState === 'all') {
+                    // Top 10 major states if 'all' requested via web to stay under timeout
+                    targetStates = ['az', 'ca', 'fl', 'tx', 'ny', 'il', 'ga', 'pa', 'nc', 'oh'];
+                } else {
+                    targetStates = [specificState.toLowerCase().trim()];
+                }
+            } else {
+                // Round-Robin Rotation based on current 15-minute slot
+                const currentMinute = new Date().getMinutes();
+                const batchIndex = Math.floor(currentMinute / 15) % STATE_BATCHES.length;
+                targetStates = STATE_BATCHES[batchIndex] || STATE_BATCHES[0];
+            }
+
+            // Scrape target states sequentially (safe for connection pooling)
+            for (const st of targetStates) {
+                const res = await scrapeStateFromLotteryUsa(st);
+                stateResults.push(res);
+            }
+        }
+
+        // 3. Database Summary Stats
         const totalGames = await Game.countDocuments();
         const totalResults = await Result.countDocuments();
-
-        // 2. Fetch top national games last draw dates
-        const topGames = await Game.find({
-            slug: { $in: ['powerball', 'mega-millions', 'lotto-america', 'lotto-max', 'canada-lotto-6-49'] }
-        }).select('name slug lastDrawDate jackpot numbers').lean();
 
         const durationMs = Date.now() - startTime;
 
         return NextResponse.json({
             status: 'ok',
-            message: 'AllUSALottery cron heartbeat received successfully.',
+            message: 'AllUSALottery live sync completed successfully.',
             timestamp: new Date().toISOString(),
             durationMs,
             stats: {
                 totalGames,
-                totalResults,
-                topGames: topGames.map(g => ({
-                    name: g.name,
-                    slug: g.slug,
-                    lastDrawDate: g.lastDrawDate,
-                    jackpot: g.jackpot,
-                    hasNumbers: !!(g.numbers && g.numbers.length > 0)
-                }))
-            }
+                totalResults
+            },
+            nationalSync: nationalUpdates,
+            canadaSync: canadaSync,
+            stateSync: stateResults
         });
+
     } catch (error: any) {
-        console.error('Cron sync error:', error);
+        console.error('Cron live sync error:', error);
         return NextResponse.json({
             status: 'error',
             message: error.message || 'Internal Server Error'

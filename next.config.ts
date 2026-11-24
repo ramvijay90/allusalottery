@@ -32,6 +32,16 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        // Edge CDN Cache Shield for HTML pages (stops Hostinger 429 & CPU spikes)
+        source: '/((?!api|_next).*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
+          },
+        ],
+      },
     ];
   },
   async redirects() {
