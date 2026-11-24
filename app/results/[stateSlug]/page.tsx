@@ -68,6 +68,12 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   atlantic: 'AC',
   bc: 'BC',
   britishcolumbia: 'BC',
+  'au-nsw': 'NSW',
+  'au-vic': 'VIC',
+  'au-qld': 'QLD',
+  'au-wa': 'WA',
+  'au-sa': 'SA',
+  'au-tas': 'TAS',
   ontario: 'ON',
   quebec: 'QC',
   westerncanada: 'WC',
@@ -111,8 +117,8 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
 
     const currentYear = new Date().getFullYear();
     const stateName = data.state.name;
-    const isCanada = data.state.country === 'Canada';
-    const regionLabel = isCanada ? 'Canada' : 'USA';
+    const country = data.state.country || 'USA';
+    const regionLabel = country === 'Canada' ? 'Canada' : (country === 'Australia' ? 'Australia' : 'USA');
 
     const title = `${stateName} Lottery Results Today & Winning Numbers ${currentYear} | ${regionLabel}`;
     const description = `Official ${stateName} lottery results today, live winning numbers, daily jackpot updates, and complete game schedules for ${currentYear}. Fast, verified drawings.`;

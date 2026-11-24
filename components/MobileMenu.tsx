@@ -46,6 +46,9 @@ export default function MobileMenu() {
             <Link href="/?country=Canada#states" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
               Canada Provinces
             </Link>
+            <Link href="/?country=Australia#states" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
+              Australia States
+            </Link>
             <Link href="/lucky-number-generator" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
               Lucky Number
             </Link>

@@ -62,7 +62,13 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   bc: 'BC',
   ontario: 'ON',
   quebec: 'QC',
-  western: 'WES'
+  western: 'WES',
+  'au-nsw': 'NSW',
+  'au-vic': 'VIC',
+  'au-qld': 'QLD',
+  'au-wa': 'WA',
+  'au-sa': 'SA',
+  'au-tas': 'TAS'
 };
 
 // Cache homepage for 5 minutes (ISR) to keep process usage minimal
@@ -73,10 +79,19 @@ async function getStates(country?: string) {
   try {
     await connectToDatabase();
     // Filter by country if provided
-    const query: any = { country: { $ne: 'Europe' } };
+    const query: any = {};
     if (country) {
-      // Handle "US" vs "Canada" cases
-      query.country = country === 'US' ? 'US' : 'Canada';
+      if (country.toLowerCase() === 'us' || country.toLowerCase() === 'usa') {
+        query.country = 'US';
+      } else if (country.toLowerCase() === 'canada') {
+        query.country = 'Canada';
+      } else if (country.toLowerCase() === 'australia') {
+        query.country = 'Australia';
+      } else {
+        query.country = country;
+      }
+    } else {
+      query.country = { $in: ['US', 'Canada', 'Australia'] };
     }
     
     // Sort by name

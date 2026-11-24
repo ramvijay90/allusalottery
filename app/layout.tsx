@@ -109,6 +109,10 @@ export default function RootLayout({
                 CANADA
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
               </Link>
+              <Link href="/?country=Australia#states" className="hover:text-[#0f172a] transition-colors relative group">
+                AUSTRALIA
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
+              </Link>
               <Link href="/lucky-number-generator" className="hover:text-[#0f172a] transition-colors relative group">
                 LUCKY NUMBER
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
@@ -151,6 +155,7 @@ export default function RootLayout({
                 <ul className="space-y-4 text-slate-400 text-sm font-bold">
                   <li><Link href="/?country=US#states" className="hover:text-white transition-colors">USA States</Link></li>
                   <li><Link href="/?country=Canada#states" className="hover:text-white transition-colors">Canada Provinces</Link></li>
+                  <li><Link href="/?country=Australia#states" className="hover:text-white transition-colors">Australia States</Link></li>
                   <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
                   <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
                 </ul>

@@ -4,6 +4,7 @@ import Game from '@/models/Game';
 import Result from '@/models/Result';
 import { syncOfficialPowerball, syncOfficialMegaMillions, syncOfficialCash4Life } from '@/lib/scrapers/officialNationalScraper';
 import { scrapeCanadaLotteries } from '@/lib/scrapers/canadaScraper';
+import { scrapeAustraliaLotteries } from '@/lib/scrapers/australiaScraper';
 import { scrapeStateFromLotteryUsa } from '@/lib/scrapers/lotteryUsaScraper';
 
 export const dynamic = 'force-dynamic';
@@ -33,12 +34,13 @@ export async function GET(request: NextRequest) {
     try {
         await connectToDatabase();
 
-        // 1. Sync Official National Games & Canada Lotteries
-        const [pbSync, mmSync, c4lSync, canadaSync] = await Promise.all([
+        // 1. Sync Official US National, Canada, and Australia Lotteries
+        const [pbSync, mmSync, c4lSync, canadaSync, auSync] = await Promise.all([
             syncOfficialPowerball(),
             syncOfficialMegaMillions(),
             syncOfficialCash4Life(),
-            scrapeCanadaLotteries()
+            scrapeCanadaLotteries(),
+            scrapeAustraliaLotteries()
         ]);
 
         const nationalUpdates = [pbSync, mmSync, c4lSync].filter(Boolean);
@@ -87,6 +89,7 @@ export async function GET(request: NextRequest) {
             },
             nationalSync: nationalUpdates,
             canadaSync: canadaSync,
+            australiaSync: auSync,
             stateSync: stateResults
         });
 
