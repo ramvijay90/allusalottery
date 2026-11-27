@@ -81,7 +81,23 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   it: 'IT',
   fr: 'FR',
   'eu-de': 'GER',
-  'de-by': 'BAY'
+  'de-by': 'BAY',
+  nz: 'NZ',
+  'nz-akl': 'AKL',
+  'nz-wlg': 'WLG',
+  'nz-can': 'CAN',
+  'nz-wko': 'WKO',
+  'nz-ota': 'OTA',
+  za: 'ZA',
+  'za-gp': 'GP',
+  'za-wc': 'WC',
+  'za-kzn': 'KZN',
+  'za-ec': 'EC',
+  'za-fs': 'FS',
+  'za-lp': 'LP',
+  'za-mp': 'MP',
+  'za-nw': 'NW',
+  'za-nc': 'NC'
 };
 
 // Cache homepage for 5 minutes (ISR) to keep process usage minimal
@@ -94,19 +110,24 @@ async function getStates(country?: string) {
     // Filter by country if provided
     const query: any = {};
     if (country) {
-      if (country.toLowerCase() === 'us' || country.toLowerCase() === 'usa') {
+      const norm = country.toLowerCase().trim();
+      if (norm === 'us' || norm === 'usa') {
         query.country = 'US';
-      } else if (country.toLowerCase() === 'canada') {
+      } else if (norm === 'canada') {
         query.country = 'Canada';
-      } else if (country.toLowerCase() === 'australia') {
+      } else if (norm === 'australia') {
         query.country = 'Australia';
-      } else if (country.toLowerCase() === 'europe' || country.toLowerCase() === 'uk') {
+      } else if (norm === 'europe' || norm === 'uk') {
         query.country = 'Europe';
+      } else if (norm === 'newzealand' || norm === 'new zealand' || norm === 'nz') {
+        query.country = 'New Zealand';
+      } else if (norm === 'southafrica' || norm === 'south africa' || norm === 'africa' || norm === 'za') {
+        query.country = 'South Africa';
       } else {
         query.country = country;
       }
     } else {
-      query.country = { $in: ['US', 'Canada', 'Australia', 'Europe'] };
+      query.country = { $in: ['US', 'Canada', 'Australia', 'Europe', 'New Zealand', 'South Africa'] };
     }
     
     // Sort by name

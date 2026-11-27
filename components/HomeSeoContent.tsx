@@ -16,11 +16,11 @@ export default function HomeSeoContent() {
     { name: 'Powerball Chart 2026', href: '/results/ca/powerball', flag: '🇺🇸', sub: 'USA Multi-State' },
     { name: 'Mega Millions Chart', href: '/results/ca/mega-millions', flag: '🇺🇸', sub: 'USA Multi-State' },
     { name: 'Canada Lotto Max Chart', href: '/results/on/lotto-max', flag: '🇨🇦', sub: 'National Canada' },
-    { name: 'Canada Lotto 6/49 Chart', href: '/results/on/canada-lotto-6-49', flag: '🇨🇦', sub: 'National Canada' },
-    { name: 'Cash4Life Results Chart', href: '/results/ny/cash-4-life', flag: '🇺🇸', sub: 'Multi-State' },
-    { name: 'California SuperLotto Chart', href: '/results/ca/superlotto-plus', flag: '🇺🇸', sub: 'California' },
-    { name: 'Texas Lotto Chart', href: '/results/tx/lotto-texas', flag: '🇺🇸', sub: 'Texas' },
-    { name: 'Florida Lotto Chart', href: '/results/fl/florida-lotto', flag: '🇺🇸', sub: 'Florida' },
+    { name: 'AU Powerball Chart', href: '/results/au-nsw/powerball-australia', flag: '🇦🇺', sub: 'Australia' },
+    { name: 'UK Lotto Chart', href: '/results/uk/uk-lotto', flag: '🇬🇧', sub: 'United Kingdom' },
+    { name: 'EuroMillions Chart', href: '/results/eu/euromillions', flag: '🇪🇺', sub: 'Pan-Europe' },
+    { name: 'NZ Powerball Chart', href: '/results/nz/nz-powerball', flag: '🇳🇿', sub: 'New Zealand' },
+    { name: 'SA PowerBall Chart', href: '/results/za/sa-powerball', flag: '🇿🇦', sub: 'South Africa' },
   ];
 
   const topStates = [
@@ -28,14 +28,14 @@ export default function HomeSeoContent() {
     { name: 'Texas Results', href: '/results/tx', code: 'TX' },
     { name: 'Florida Results', href: '/results/fl', code: 'FL' },
     { name: 'New York Results', href: '/results/ny', code: 'NY' },
-    { name: 'Pennsylvania Results', href: '/results/pa', code: 'PA' },
-    { name: 'Ohio Results', href: '/results/oh', code: 'OH' },
-    { name: 'Illinois Results', href: '/results/il', code: 'IL' },
-    { name: 'Michigan Results', href: '/results/mi', code: 'MI' },
     { name: 'Ontario Results', href: '/results/on', code: 'ON' },
-    { name: 'Quebec Results', href: '/results/qc', code: 'QC' },
-    { name: 'Atlantic Canada', href: '/results/ac', code: 'AC' },
-    { name: 'British Columbia', href: '/results/bc', code: 'BC' },
+    { name: 'New South Wales', href: '/results/au-nsw', code: 'NSW' },
+    { name: 'United Kingdom', href: '/results/uk', code: 'UK' },
+    { name: 'New Zealand', href: '/results/nz', code: 'NZ' },
+    { name: 'Auckland Hub', href: '/results/nz-akl', code: 'AKL' },
+    { name: 'South Africa', href: '/results/za', code: 'ZA' },
+    { name: 'Gauteng Hub', href: '/results/za-gp', code: 'GP' },
+    { name: 'Western Cape', href: '/results/za-wc', code: 'WC' },
   ];
 
   return (

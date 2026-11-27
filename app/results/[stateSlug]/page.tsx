@@ -90,12 +90,90 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   it: 'IT',
   fr: 'FR',
   'eu-de': 'GER',
-  'de-by': 'BAY'
+  'de-by': 'BAY',
+  nz: 'NZ',
+  newzealand: 'NZ',
+  'nz-akl': 'AKL',
+  auckland: 'AKL',
+  'nz-wlg': 'WLG',
+  wellington: 'WLG',
+  'nz-can': 'CAN',
+  canterbury: 'CAN',
+  'nz-wko': 'WKO',
+  waikato: 'WKO',
+  'nz-ota': 'OTA',
+  otago: 'OTA',
+  za: 'ZA',
+  southafrica: 'ZA',
+  africa: 'ZA',
+  'za-gp': 'GP',
+  gauteng: 'GP',
+  'za-wc': 'WC',
+  westerncape: 'WC',
+  'za-kzn': 'KZN',
+  kwazulunatal: 'KZN',
+  'za-ec': 'EC',
+  easterncape: 'EC',
+  'za-fs': 'FS',
+  freestate: 'FS',
+  'za-lp': 'LP',
+  limpopo: 'LP',
+  'za-mp': 'MP',
+  mpumalanga: 'MP',
+  'za-nw': 'NW',
+  northwest: 'NW',
+  'za-nc': 'NC',
+  northerncape: 'NC'
+};
+
+const STATE_SLUG_ALIASES: { [key: string]: string } = {
+  washingtondc: 'dc',
+  districtcolumbia: 'dc',
+  atlanticcanada: 'ac',
+  atlantic: 'ac',
+  britishcolumbia: 'bc',
+  ontario: 'on',
+  quebec: 'qc',
+  westerncanada: 'wc',
+  western: 'wc',
+  unitedkingdom: 'uk',
+  england: 'uk-eng',
+  scotland: 'uk-sct',
+  wales: 'uk-wls',
+  northernireland: 'uk-nir',
+  ireland: 'ie',
+  spain: 'es',
+  catalonia: 'es-cat',
+  italy: 'it',
+  france: 'fr',
+  germany: 'eu-de',
+  bavaria: 'de-by',
+  newzealand: 'nz',
+  auckland: 'nz-akl',
+  wellington: 'nz-wlg',
+  canterbury: 'nz-can',
+  waikato: 'nz-wko',
+  otago: 'nz-ota',
+  southafrica: 'za',
+  africa: 'za',
+  gauteng: 'za-gp',
+  westerncape: 'za-wc',
+  kwazulunatal: 'za-kzn',
+  easterncape: 'za-ec',
+  freestate: 'za-fs',
+  limpopo: 'za-lp',
+  mpumalanga: 'za-mp',
+  northwest: 'za-nw',
+  northerncape: 'za-nc',
 };
 
 function resolveStateSlug(input: string): string {
   const clean = (input || '').toLowerCase().trim();
+  if (/^[a-z]{2}(-[a-z0-9]+)?$/.test(clean)) {
+    return clean;
+  }
   const normalizedKey = clean.replace(/[^a-z]/g, '');
+  if (STATE_SLUG_ALIASES[normalizedKey]) return STATE_SLUG_ALIASES[normalizedKey];
   if (STATE_ABBREVIATIONS[normalizedKey]) {
     return STATE_ABBREVIATIONS[normalizedKey].toLowerCase();
   }
@@ -131,7 +209,8 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
     const currentYear = new Date().getFullYear();
     const stateName = data.state.name;
     const country = data.state.country || 'USA';
-    const regionLabel = country === 'Canada' ? 'Canada' : (country === 'Australia' ? 'Australia' : 'USA');
+    const regionLabel = country === 'US' ? 'USA' : country;
+    const activeGamesCount = (data.games || []).filter((g: any) => Array.isArray(g.numbers) && g.numbers.length > 0).length;
 
     const title = `${stateName} Lottery Results Today & Winning Numbers ${currentYear} | ${regionLabel}`;
     const description = `Official ${stateName} lottery results today, live winning numbers, daily jackpot updates, and complete game schedules for ${currentYear}. Fast, verified drawings.`;
@@ -144,6 +223,9 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
         alternates: {
             canonical: canonicalUrl,
         },
+        robots: activeGamesCount > 0
+            ? { index: true, follow: true }
+            : { index: false, follow: true },
         keywords: [
             `${stateName} lottery`,
             `${stateName} lottery results`,

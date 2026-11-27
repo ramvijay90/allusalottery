@@ -18,15 +18,19 @@ export default function LotteryChartNavigation({ stateSlug, gameSlug }: LotteryC
     { name: 'Powerball Chart', href: '/results/ca/powerball', flag: '🇺🇸' },
     { name: 'Mega Millions Chart', href: '/results/ca/mega-millions', flag: '🇺🇸' },
     { name: 'Lotto Max Chart', href: '/results/on/lotto-max', flag: '🇨🇦' },
-    { name: 'Lotto 6/49 Chart', href: '/results/on/canada-lotto-6-49', flag: '🇨🇦' },
+    { name: 'AU Powerball Chart', href: '/results/au-nsw/powerball-australia', flag: '🇦🇺' },
+    { name: 'UK Lotto Chart', href: '/results/uk/uk-lotto', flag: '🇬🇧' },
+    { name: 'NZ Powerball Chart', href: '/results/nz/nz-powerball', flag: '🇳🇿' },
+    { name: 'SA PowerBall Chart', href: '/results/za/sa-powerball', flag: '🇿🇦' },
   ];
 
-  // Top Popular States
+  // Top Popular States & Regions
   const popularStates = [
-    { name: 'California Results', href: '/results/ca' },
-    { name: 'Texas Results', href: '/results/tx' },
-    { name: 'Florida Results', href: '/results/fl' },
-    { name: 'New York Results', href: '/results/ny' },
+    { name: 'California', href: '/results/ca' },
+    { name: 'Texas', href: '/results/tx' },
+    { name: 'New York', href: '/results/ny' },
+    { name: 'New Zealand', href: '/results/nz' },
+    { name: 'South Africa', href: '/results/za' },
     { name: 'Live Feeds', href: '/live-results' },
   ];
 

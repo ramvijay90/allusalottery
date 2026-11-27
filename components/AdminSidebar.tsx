@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
-import { LayoutDashboard, Database, Settings, LogOut, Play } from 'lucide-react';
+import { LayoutDashboard, Database, Settings, LogOut, Play, ShieldAlert } from 'lucide-react';
 import classNames from 'classnames';
 
 export default function AdminSidebar() {
@@ -11,6 +11,7 @@ export default function AdminSidebar() {
 
     const navItems = [
         { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/audit', label: 'URL Audit & Sync', icon: ShieldAlert },
         { href: '/admin/scraper', label: 'Scraper Control', icon: Play },
         { href: '/admin/data', label: 'Data Management', icon: Database },
         { href: '/admin/settings', label: 'Settings', icon: Settings },

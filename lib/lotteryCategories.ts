@@ -4,7 +4,7 @@ export interface LotteryCategory {
   id: string;
   name: string;
   country: string;
-  region: 'USA' | 'Europe' | 'Australia' | 'Global' | 'Kerala';
+  region: 'USA' | 'Europe' | 'Australia' | 'New Zealand' | 'South Africa' | 'Global' | 'Kerala';
   flag: string;
   mode: CategoryMode;
   mainBalls?: number;
@@ -578,6 +578,112 @@ export const CATEGORIES: LotteryCategory[] = [
     h1Title: 'Mega 7 UAE Lucky Number Generator',
     keywords: ['mega 7 lucky number generator', 'emirates draw mega 7 numbers'],
     faqs: [{ question: 'What is Mega 7 format?', answer: 'Selects 7 numbers from 1 to 37.' }]
+  },
+
+  // --- NEW ZEALAND LOTTERIES ---
+  {
+    id: 'nz-lotto',
+    name: 'NZ Lotto',
+    country: 'New Zealand',
+    region: 'New Zealand',
+    flag: '🇳🇿',
+    mode: 'standard',
+    mainBalls: 6,
+    mainRange: [1, 40],
+    specialBalls: 1,
+    specialRange: [1, 40],
+    specialName: 'Bonus Ball',
+    seoTitle: 'NZ Lotto Lucky Number Generator 2026 | New Zealand Lotto Picker',
+    seoDescription: 'Generate random NZ Lotto numbers (6 balls from 1-40) for New Zealand Wednesday and Saturday night draws.',
+    h1Title: 'New Zealand Lotto Lucky Number Generator',
+    keywords: ['nz lotto lucky number generator', 'new zealand lotto quick pick', 'lotto nz numbers generator'],
+    faqs: [{ question: 'How is NZ Lotto played?', answer: 'Selects 6 main numbers from 1 to 40 drawn every Wednesday and Saturday in New Zealand.' }]
+  },
+  {
+    id: 'nz-powerball',
+    name: 'NZ Powerball',
+    country: 'New Zealand',
+    region: 'New Zealand',
+    flag: '🇳🇿',
+    mode: 'standard',
+    mainBalls: 6,
+    mainRange: [1, 40],
+    specialBalls: 1,
+    specialRange: [1, 10],
+    specialName: 'Powerball',
+    seoTitle: 'NZ Powerball Lucky Number Generator 2026 | New Zealand Jackpot Picker',
+    seoDescription: 'Generate winning NZ Powerball numbers (6 balls 1-40 + 1 Powerball 1-10) for New Zealand national draws.',
+    h1Title: 'New Zealand Powerball Lucky Number Generator',
+    keywords: ['nz powerball lucky number generator', 'new zealand powerball picker', 'lotto nz powerball generator'],
+    faqs: [{ question: 'What is the NZ Powerball format?', answer: 'Picks 6 Lotto balls from 1 to 40 plus 1 Powerball from 1 to 10.' }]
+  },
+  {
+    id: 'nz-keno',
+    name: 'NZ Keno',
+    country: 'New Zealand',
+    region: 'New Zealand',
+    flag: '🇳🇿',
+    mode: 'standard',
+    mainBalls: 10,
+    mainRange: [1, 80],
+    seoTitle: 'NZ Keno Lucky Number Generator 2026 | New Zealand 80-Ball Picker',
+    seoDescription: 'Generate up to 10 Keno spots from 1 to 80 for New Zealand daily Lotto NZ Keno draws.',
+    h1Title: 'New Zealand Keno Lucky Number Generator',
+    keywords: ['nz keno lucky number generator', 'new zealand keno picker', 'keno nz quick pick'],
+    faqs: [{ question: 'How does NZ Keno work?', answer: 'Twenty numbers are drawn from 1 to 80 four times daily; players pick up to 10 spots.' }]
+  },
+
+  // --- AFRICA -> SOUTH AFRICA LOTTERIES ---
+  {
+    id: 'sa-lotto',
+    name: 'SA Lotto',
+    country: 'South Africa',
+    region: 'South Africa',
+    flag: '🇿🇦',
+    mode: 'standard',
+    mainBalls: 6,
+    mainRange: [1, 52],
+    specialBalls: 1,
+    specialRange: [1, 52],
+    specialName: 'Bonus Ball',
+    seoTitle: 'South Africa Lotto Lucky Number Generator 2026 | SA Lotto Picker',
+    seoDescription: 'Generate SA Lotto, Lotto Plus 1, and Lotto Plus 2 combinations (6 balls from 1-52) for Wednesday and Saturday draws.',
+    h1Title: 'South Africa Lotto Lucky Number Generator',
+    keywords: ['sa lotto lucky number generator', 'south africa lotto quick pick', 'ithuba lotto numbers generator'],
+    faqs: [{ question: 'What is the South Africa Lotto matrix?', answer: 'Selects 6 main balls from 1 to 52 plus 1 Bonus Ball.' }]
+  },
+  {
+    id: 'sa-powerball',
+    name: 'SA PowerBall',
+    country: 'South Africa',
+    region: 'South Africa',
+    flag: '🇿🇦',
+    mode: 'standard',
+    mainBalls: 5,
+    mainRange: [1, 50],
+    specialBalls: 1,
+    specialRange: [1, 20],
+    specialName: 'PowerBall',
+    seoTitle: 'SA PowerBall Lucky Number Generator 2026 | South Africa PowerBall Picker',
+    seoDescription: 'Generate SA PowerBall & PowerBall Plus numbers (5 balls 1-50 + 1 PowerBall 1-20) for Tuesday and Friday draws.',
+    h1Title: 'South Africa PowerBall Lucky Number Generator',
+    keywords: ['sa powerball lucky number generator', 'south africa powerball quick pick', 'powerball plus sa generator'],
+    faqs: [{ question: 'What is the SA PowerBall matrix?', answer: 'Picks 5 main numbers from 1 to 50 and 1 PowerBall from 1 to 20.' }]
+  },
+  {
+    id: 'sa-daily-lotto',
+    name: 'SA Daily Lotto',
+    country: 'South Africa',
+    region: 'South Africa',
+    flag: '🇿🇦',
+    mode: 'standard',
+    mainBalls: 5,
+    mainRange: [1, 36],
+    seoTitle: 'SA Daily Lotto Lucky Number Generator 2026 | South Africa 5/36 Picker',
+    seoDescription: 'Generate daily South Africa Daily Lotto numbers (5 balls from 1-36) for every nightly 9 PM SAST drawing.',
+    h1Title: 'South Africa Daily Lotto Lucky Number Generator',
+    keywords: ['sa daily lotto lucky number generator', 'daily lotto quick pick south africa', 'daily lotto 5/36 generator'],
+    faqs: [{ question: 'How does SA Daily Lotto work?', answer: 'Selects 5 numbers from 1 to 36 drawn every night with guaranteed daily payouts.' }]
   },
 
   // --- GENERAL NUMBER & CUSTOM PICKER ---

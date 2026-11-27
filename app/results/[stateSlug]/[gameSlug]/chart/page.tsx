@@ -28,12 +28,17 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
     const canonicalUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}/chart`;
     const ogImageUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}/opengraph-image`;
 
+    const hasNumbers = Array.isArray(data.game.numbers) && data.game.numbers.length > 0;
+
     return {
         title,
         description,
         alternates: {
             canonical: canonicalUrl,
         },
+        robots: hasNumbers
+            ? { index: true, follow: true }
+            : { index: false, follow: true },
         keywords: [
             `${data.game.name} chart 2026`,
             `${data.game.name} monthly chart`,

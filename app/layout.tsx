@@ -11,11 +11,12 @@ const outfit = Outfit({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://allusalottery.com'),
-  title: 'All USA Lottery - Live Real-Time Winning Numbers & Results',
-  description: 'Fast, accurate, and live lottery results for USA and Canada. Get the latest winning numbers for Powerball, Mega Millions, Lotto America, Cash4Life, and state lotteries immediately after drawing.',
+  title: 'All USA Lottery - Live Real-Time Winning Numbers & Global Results',
+  description: 'Fast, accurate, and live lottery results for USA, Canada, Australia, UK, Europe, New Zealand, and South Africa. Get the latest winning numbers for Powerball, Mega Millions, Lotto NZ, SA PowerBall, and state lotteries immediately after drawing.',
   keywords: [
     'USA Lottery', 'Mega Millions', 'Powerball', 'Winning Numbers', 'State Lottery Results', 
     'Lottery Jackpots', 'Lotto Numbers', 'Lucky Number Generator', 'Canada Lottery', 'Lotto Max',
+    'Australia Powerball', 'UK Lotto', 'EuroMillions', 'NZ Lotto', 'South Africa PowerBall',
     'live lottery results', 'pick 3 pick 4 numbers', 'tonight\'s winning numbers', 'allusalottery'
   ],
   openGraph: {
@@ -117,6 +118,14 @@ export default function RootLayout({
                 UK & EUROPE
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
               </Link>
+              <Link href="/?country=New Zealand#states" className="hover:text-[#0f172a] transition-colors relative group">
+                NEW ZEALAND
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
+              </Link>
+              <Link href="/?country=South Africa#states" className="hover:text-[#0f172a] transition-colors relative group">
+                AFRICA (SA)
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
+              </Link>
               <Link href="/lucky-number-generator" className="hover:text-[#0f172a] transition-colors relative group">
                 LUCKY NUMBER
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
@@ -151,7 +160,7 @@ export default function RootLayout({
                   ALL<span className="text-[#f59e0b]">USA</span>LOTTERY
                 </div>
                 <p className="text-slate-500 max-w-xs leading-relaxed font-medium">
-                  The professional destination for accurate, instant, and reliable lottery results across North America.
+                  The professional destination for accurate, instant, and reliable lottery results across USA, Canada, Australia, UK, Europe, New Zealand &amp; South Africa.
                 </p>
               </div>
               <div>
@@ -160,7 +169,9 @@ export default function RootLayout({
                   <li><Link href="/?country=US#states" className="hover:text-white transition-colors">USA States</Link></li>
                   <li><Link href="/?country=Canada#states" className="hover:text-white transition-colors">Canada Provinces</Link></li>
                   <li><Link href="/?country=Australia#states" className="hover:text-white transition-colors">Australia States</Link></li>
-                  <li><Link href="/?country=Europe#states" className="hover:text-white transition-colors">UK & Europe Results</Link></li>
+                  <li><Link href="/?country=Europe#states" className="hover:text-white transition-colors">UK &amp; Europe Results</Link></li>
+                  <li><Link href="/?country=New Zealand#states" className="hover:text-white transition-colors">New Zealand Results</Link></li>
+                  <li><Link href="/?country=South Africa#states" className="hover:text-white transition-colors">Africa • South Africa</Link></li>
                   <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
                   <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
                 </ul>

@@ -1,11 +1,6 @@
-import { cache } from 'react';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, ChevronLeft, ChevronRight, TrendingUp, Zap, Building2, Landmark, Clock, ShieldCheck, DollarSign, Award, ExternalLink } from 'lucide-react';
-import connectToDatabase from '@/lib/db';
-import Game from '@/models/Game';
-import State from '@/models/State';
-import Result from '@/models/Result';
 import GameChartAnalytics from '@/components/GameChartAnalytics';
 import ChartImagePreview from '@/components/ChartImagePreview';
 import LotteryChartNavigation from '@/components/LotteryChartNavigation';
@@ -15,217 +10,62 @@ import SidebarAd from '@/components/ads/SidebarAd';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
 import AfterContentAd from '@/components/ads/AfterContentAd';
 import { getStateLotteryDetails } from '@/lib/stateLotteryInfo';
+import { getGameData, resolveAliases, cleanJackpot } from '@/lib/getGameData';
 
 // Cache responses for 5 minutes (ISR) to keep server process count near 0
 export const revalidate = 300;
 
-const STATE_ALIASES: Record<string, string> = {
-  arizona: 'az',
-  arkansas: 'ar',
-  california: 'ca',
-  colorado: 'co',
-  connecticut: 'ct',
-  delaware: 'de',
-  florida: 'fl',
-  georgia: 'ga',
-  idaho: 'id',
-  illinois: 'il',
-  indiana: 'in',
-  iowa: 'ia',
-  kansas: 'ks',
-  kentucky: 'ky',
-  louisiana: 'la',
-  maine: 'me',
-  maryland: 'md',
-  massachusetts: 'ma',
-  michigan: 'mi',
-  minnesota: 'mn',
-  mississippi: 'ms',
-  missouri: 'mo',
-  montana: 'mt',
-  nebraska: 'ne',
-  newhampshire: 'nh',
-  newjersey: 'nj',
-  newmexico: 'nm',
-  newyork: 'ny',
-  northcarolina: 'nc',
-  northdakota: 'nd',
-  ohio: 'oh',
-  oklahoma: 'ok',
-  oregon: 'or',
-  pennsylvania: 'pa',
-  puertorico: 'pr',
-  rhodeisland: 'ri',
-  southcarolina: 'sc',
-  southdakota: 'sd',
-  tennessee: 'tn',
-  texas: 'tx',
-  vermont: 'vt',
-  virginia: 'va',
-  washington: 'wa',
-  westvirginia: 'wv',
-  wisconsin: 'wi',
-  wyoming: 'wy',
-  dc: 'dc',
-  washingtondc: 'dc',
-  ontario: 'on',
-  quebec: 'qc',
-  britishcolumbia: 'bc',
-  atlanticcanada: 'ac',
-  atlantic: 'ac',
-  westerncanada: 'wc',
-  western: 'wc',
-  'au-nsw': 'au-nsw',
-  'au-vic': 'au-vic',
-  'au-qld': 'au-qld',
-  'au-wa': 'au-wa',
-  'au-sa': 'au-sa',
-  'au-tas': 'au-tas',
-  eu: 'eu',
-  europe: 'eu',
-  uk: 'uk',
-  unitedkingdom: 'uk',
-  'uk-eng': 'uk-eng',
-  england: 'uk-eng',
-  'uk-sct': 'uk-sct',
-  scotland: 'uk-sct',
-  'uk-wls': 'uk-wls',
-  wales: 'uk-wls',
-  'uk-nir': 'uk-nir',
-  northernireland: 'uk-nir',
-  ie: 'ie',
-  ireland: 'ie',
-  es: 'es',
-  spain: 'es',
-  'es-cat': 'es-cat',
-  catalonia: 'es-cat',
-  it: 'it',
-  italy: 'it',
-  fr: 'fr',
-  france: 'fr',
-  'eu-de': 'eu-de',
-  germany: 'eu-de',
-  'de-by': 'de-by',
-  bavaria: 'de-by'
-};
-
-const GAME_ALIASES: Record<string, string> = {
-  lottomax: 'lotto-max',
-  megamillions: 'mega-millions',
-  powerball: 'powerball',
-  'power-ball': 'powerball',
-  lotto649: 'canada-lotto-6-49',
-  'lotto-6-49': 'canada-lotto-6-49',
-  'canada-lotto649': 'canada-lotto-6-49',
-};
-
-function cleanJackpot(jackpotStr?: string): string {
-  if (!jackpotStr) return '';
-  let text = jackpotStr.trim();
-  if (!text || text.toLowerCase() === 'official' || text.toLowerCase() === 'official result') return '';
-
-  // Fix common scrape/OCR typo: CAS65 -> CA$65
-  text = text.replace(/^CAS(?=\d)/i, 'CA$');
-
-  // 1. Canadian Dollar pattern: CA$65 Million, CAD $12 Million, etc.
-  const caMatch = text.match(/(?:CA\s?\$?|CAD\s?\$?)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
-  if (caMatch && caMatch[0].length >= 3) {
-    let res = caMatch[0].trim();
-    if (/^CA(?!\$)/i.test(res)) res = res.replace(/^CA/i, 'CA$');
-    return res;
-  }
-
-  // 2. US / AU / UK / Euro pattern: US$45.95 Million, $2.65 Million, €130 Million, £5.4 Million, etc.
-  const usMatch = text.match(/(?:US\s?\$?|AU\s?\$?|\$|£|€)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
-  if (usMatch && usMatch[0].length >= 2) {
-    return usMatch[0].trim();
-  }
-
-  // 3. Fallback: match any standalone value with Million/Billion
-  const millionMatch = text.match(/[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
-  if (millionMatch) {
-    return `$${millionMatch[0].trim()}`;
-  }
-
-  return text.length > 18 ? text.slice(0, 16) + '...' : text;
-}
-
-function resolveAliases(stateSlug: string, gameSlug: string) {
-  const cleanState = (stateSlug || '').toLowerCase().trim();
-  const cleanGame = (gameSlug || '').toLowerCase().trim();
-  const resolvedState = STATE_ALIASES[cleanState.replace(/[^a-z]/g, '')] || cleanState;
-  const resolvedGame = GAME_ALIASES[cleanGame.replace(/[^a-z0-9]/g, '')] || GAME_ALIASES[cleanGame] || cleanGame;
-  return { resolvedState, resolvedGame };
-}
-
-const getGameData = cache(async (stateSlug: string, gameSlug: string) => {
-    await connectToDatabase();
-    const state = await State.findOne({ slug: stateSlug }).lean();
-    if (!state) return null;
-
-    const game = await Game.findOne({ stateSlug, slug: gameSlug }).lean();
-    if (!game) return null;
-
-    // Determine if this is a "Top/Jackpot" game
-    const isTopGame = !!game.jackpot || 
-                      ['powerball', 'megamillions', 'lottomax'].includes(game.slug.toLowerCase()) ||
-                      game.name.match(/Powerball|Mega Millions|Lotto Max/i);
-
-    // Calculate cutoff
-    let cutoffDate: Date;
-    if (isTopGame) {
-        // Jackpot/Top games: last 1 year from current date
-        cutoffDate = new Date();
-        cutoffDate.setDate(cutoffDate.getDate() - 365);
-    } else {
-        // Standard games: only from Jan 1, 2026
-        cutoffDate = new Date('2026-01-01T00:00:00Z');
-    }
-
-    // Fetch initial history (50 items) for rich charts
-    let history = await Result.find({
-        gameId: game._id,
-        date: { $gte: cutoffDate }
-    })
-        .sort({ date: -1 })
-        .limit(50)
-        .lean();
-
-    // Fallback: If no records match 2026 cutoff, fetch latest available history to prevent empty tables
-    if (history.length === 0) {
-        history = await Result.find({
-            gameId: game._id
-        })
-            .sort({ date: -1 })
-            .limit(50)
-            .lean();
-    }
-
-    // Fetch sibling games in the same state for internal linking equity
-    const siblingGames = await Game.find({ stateSlug, slug: { $ne: gameSlug } })
-        .select('name slug lastDrawDate numbers jackpot')
-        .sort({ name: 1 })
-        .limit(8)
-        .lean();
-
-    // Fallback: If no history records found in Result collection, use the game's latest numbers
-    const initialHistoryData = history.length > 0 
-        ? history 
-        : (game.numbers && game.numbers.length > 0 ? [{
-            date: game.lastDrawDate ? new Date(game.lastDrawDate).toISOString() : new Date().toISOString(),
-            numbers: game.numbers,
-            jackpot: game.jackpot || '',
-            powerBall: game.powerBall || ''
-        }] : []);
-
+function getCountrySeoContext(country?: string, stateSlug?: string) {
+  const c = (country || 'US').toLowerCase();
+  const s = (stateSlug || '').toLowerCase();
+  if (c === 'new zealand') {
     return {
-        state: JSON.parse(JSON.stringify(state)),
-        game: JSON.parse(JSON.stringify(game)),
-        history: JSON.parse(JSON.stringify(initialHistoryData)),
-        siblingGames: JSON.parse(JSON.stringify(siblingGames)),
-        cutoffDate: cutoffDate.toISOString()
+      countryCode: 'NZ',
+      currency: 'NZD',
+      ticketPrice: '1.50',
+      federalNote: 'New Zealand Inland Revenue (IRD) does not tax casual lotto prize winnings.',
     };
-});
+  }
+  if (c === 'south africa') {
+    return {
+      countryCode: 'ZA',
+      currency: 'ZAR',
+      ticketPrice: '5.00',
+      federalNote: 'South African Revenue Service (SARS) exempts non-professional National Lottery payouts from income tax.',
+    };
+  }
+  if (c === 'australia') {
+    return {
+      countryCode: 'AU',
+      currency: 'AUD',
+      ticketPrice: '1.40',
+      federalNote: 'Australian Taxation Office (ATO) treats lottery jackpots as tax-free windfalls.',
+    };
+  }
+  if (c === 'canada') {
+    return {
+      countryCode: 'CA',
+      currency: 'CAD',
+      ticketPrice: '5.00',
+      federalNote: 'Canada Revenue Agency (CRA) does not tax lottery prize winnings.',
+    };
+  }
+  if (c === 'europe') {
+    const isUk = s.startsWith('uk');
+    return {
+      countryCode: isUk ? 'GB' : (s === 'ie' ? 'IE' : s === 'es' || s === 'es-cat' ? 'ES' : s === 'it' ? 'IT' : s === 'fr' ? 'FR' : 'DE'),
+      currency: isUk ? 'GBP' : 'EUR',
+      ticketPrice: isUk ? '2.00' : '2.50',
+      federalNote: 'Subject to national lottery commission prize distribution rules in the issuing country.',
+    };
+  }
+  return {
+    countryCode: 'US',
+    currency: 'USD',
+    ticketPrice: '2.00',
+    federalNote: 'Federal tax withholding of 24% applies to prizes exceeding $5,000 for US citizens.',
+  };
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ stateSlug: string, gameSlug: string }> }) {
     const { stateSlug, gameSlug } = await params;
@@ -235,7 +75,8 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
 
     const currentYear = new Date().getFullYear();
     const stateDetails = getStateLotteryDetails(resolvedState);
-    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euro-jackpot'].includes(data.game.slug.toLowerCase());
+    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euromillions', 'euro-jackpot', 'eurojackpot', 'nz-powerball', 'nz-lotto', 'sa-powerball', 'sa-lotto'].includes(data.game.slug.toLowerCase());
+    const hasNumbers = Array.isArray(data.game.numbers) && data.game.numbers.length > 0;
     
     // Unique formula for EVERY state to eliminate Google deduplication
     const primaryTitle = isMultiState
@@ -244,7 +85,7 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
     
     const title = `${primaryTitle} | Past Drawings & Payouts`;
     const cleanJp = cleanJackpot(data.game.jackpot);
-    const description = `Official ${data.state.name} ${data.game.name} winning numbers for ${currentYear}. Complete past draw history, 2026 result charts, ${data.state.name} claim deadlines (${stateDetails.claimPeriod}), state tax rates (${stateDetails.stateTaxRate}), and jackpot payouts (${cleanJp || 'official draws'}).`;
+    const description = `Official ${data.state.name} ${data.game.name} winning numbers for ${currentYear}. Complete past draw history, 2026 result charts, ${data.state.name} claim deadlines (${stateDetails.claimPeriod}), tax rates (${stateDetails.stateTaxRate}), and jackpot payouts (${cleanJp || 'official draws'}).`;
     const canonicalUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}`;
     const ogImageUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}/opengraph-image`;
 
@@ -254,6 +95,9 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
         alternates: {
             canonical: canonicalUrl,
         },
+        robots: hasNumbers
+            ? { index: true, follow: true }
+            : { index: false, follow: true },
         keywords: [
             `${data.game.name} results`,
             `${data.game.name} winning numbers`,
@@ -314,9 +158,14 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
 
     const { state, game, history, siblingGames } = data;
     const stateDetails = getStateLotteryDetails(state.slug);
+    const countrySeo = getCountrySeoContext(state.country, state.slug);
+    const hasDrawDate = Boolean(game.lastDrawDate);
+    const formattedLastDraw = hasDrawDate
+        ? new Date(game.lastDrawDate).toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+        : 'Pending Official Draw';
 
     const currentYear = new Date().getFullYear();
-    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euro-jackpot'].includes(game.slug.toLowerCase());
+    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euromillions', 'euro-jackpot', 'eurojackpot', 'nz-powerball', 'nz-lotto', 'sa-powerball', 'sa-lotto'].includes(game.slug.toLowerCase());
     const pageH1 = isMultiState
         ? `${state.name} ${game.name} Winning Numbers & Results ${currentYear}`
         : `${state.name} ${game.name} Winning Numbers Today`;
@@ -357,7 +206,9 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                 'name': `What are today's ${state.name} ${game.name} winning numbers?`,
                 'acceptedAnswer': {
                     '@type': 'Answer',
-                    'text': `The most recent winning numbers for ${state.name} ${game.name} drawn on ${new Date(game.lastDrawDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} are ${game.numbers.join(', ')}${game.powerBall ? ` with bonus ball ${game.powerBall}` : ''}.`
+                    'text': game.numbers && game.numbers.length > 0
+                        ? `The most recent winning numbers for ${state.name} ${game.name} drawn on ${formattedLastDraw} are ${game.numbers.join(', ')}${game.powerBall ? ` with bonus ball ${game.powerBall}` : ''}.`
+                        : `Winning numbers for ${state.name} ${game.name} are updated live immediately after the official drawing.`
                 }
             },
             {
@@ -365,7 +216,7 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                 'name': `What is the lottery tax rate on winnings in ${state.name}?`,
                 'acceptedAnswer': {
                     '@type': 'Answer',
-                    'text': `In ${state.name}, the state tax withholding on lottery prizes is ${stateDetails.stateTaxRate}. Federal taxes may also apply to prizes over $5,000.`
+                    'text': `In ${state.name}, the tax withholding rate is ${stateDetails.stateTaxRate}. ${countrySeo.federalNote}`
                 }
             },
             {
@@ -425,14 +276,14 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
             'address': {
                 '@type': 'PostalAddress',
                 'addressRegion': state.name,
-                'addressCountry': 'US'
+                'addressCountry': countrySeo.countryCode
             }
         },
-        'description': `Official ${state.name} ${game.name} lottery drawing. Winning numbers: ${game.numbers.join(' ')}${game.powerBall ? ' [' + game.powerBall + ']' : ''}.`,
+        'description': `Official ${state.name} ${game.name} lottery drawing. Winning numbers: ${(game.numbers || []).join(' ')}${game.powerBall ? ' [' + game.powerBall + ']' : ''}.`,
         'offers': {
             '@type': 'Offer',
-            'price': '2.00',
-            'priceCurrency': 'USD',
+            'price': countrySeo.ticketPrice,
+            'priceCurrency': countrySeo.currency,
             'availability': 'https://schema.org/InStock',
             'url': `https://allusalottery.com/results/${state.slug}/${game.slug}`
         }
@@ -561,7 +412,7 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                             <div className="flex items-center gap-2">
                                 <span className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Official Draw Date:</span>
                                 <span suppressHydrationWarning className="text-white font-black text-sm sm:text-base">
-                                    {new Date(game.lastDrawDate).toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                                    {formattedLastDraw}
                                 </span>
                             </div>
                             <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
@@ -615,7 +466,7 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                                 <div className="text-sm font-bold text-slate-800">
                                     {stateDetails.stateTaxRate}
                                 </div>
-                                <p className="text-[11px] text-slate-500 mt-1">Federal withholding of 24% applies to prizes exceeding $5,000 for US citizens.</p>
+                                <p className="text-[11px] text-slate-500 mt-1">{countrySeo.federalNote}</p>
                             </div>
 
                             <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4">
@@ -722,7 +573,7 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                                     <span className="text-[#f59e0b] font-black">Q.</span> What are today&apos;s winning numbers for {state.name} {game.name}?
                                 </h3>
                                 <p className="text-sm text-slate-600 pl-6 leading-relaxed">
-                                    The latest winning numbers drawn on {new Date(game.lastDrawDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} are <strong>{game.numbers.join(' - ')}</strong>{game.powerBall ? ` with bonus ball ${game.powerBall}` : ''}.
+                                    The latest winning numbers drawn on {formattedLastDraw} are <strong>{(game.numbers || []).join(' - ') || 'Pending'}</strong>{game.powerBall ? ` with bonus ball ${game.powerBall}` : ''}.
                                 </p>
                             </div>
                             <div className="space-y-2">
@@ -730,7 +581,7 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                                     <span className="text-[#f59e0b] font-black">Q.</span> What is the lottery tax rate on winnings in {state.name}?
                                 </h3>
                                 <p className="text-sm text-slate-600 pl-6 leading-relaxed">
-                                    In {state.name}, the state tax withholding rate is <strong>{stateDetails.stateTaxRate}</strong>. In addition, mandatory federal tax withholding of 24% applies to prizes over $5,000 for US citizens and resident aliens.
+                                    In {state.name}, the tax withholding rate is <strong>{stateDetails.stateTaxRate}</strong>. {countrySeo.federalNote}
                                 </p>
                             </div>
                             <div className="space-y-2">

@@ -6,6 +6,8 @@ import { syncOfficialPowerball, syncOfficialMegaMillions, syncOfficialMillionair
 import { scrapeCanadaLotteries } from '@/lib/scrapers/canadaScraper';
 import { scrapeAustraliaLotteries } from '@/lib/scrapers/australiaScraper';
 import { scrapeEuropeLotteries } from '@/lib/scrapers/europeScraper';
+import { scrapeNewZealandLotteries } from '@/lib/scrapers/newZealandScraper';
+import { scrapeSouthAfricaLotteries } from '@/lib/scrapers/southAfricaScraper';
 import { scrapeStateFromLotteryUsa, StateScrapeResult } from '@/lib/scrapers/lotteryUsaScraper';
 import { revalidatePath } from 'next/cache';
 
@@ -48,14 +50,16 @@ export async function GET(request: NextRequest) {
     try {
         await connectToDatabase();
 
-        // 1. Sync Official US National, Canada, Australia, and UK & Europe Lotteries concurrently
-        const [pbSync, mmSync, mflSync, canadaSync, auSync, europeSync] = await Promise.all([
+        // 1. Sync Official US National, Canada, Australia, UK & Europe, New Zealand, and South Africa Lotteries concurrently
+        const [pbSync, mmSync, mflSync, canadaSync, auSync, europeSync, nzSync, zaSync] = await Promise.all([
             syncOfficialPowerball(),
             syncOfficialMegaMillions(),
             syncOfficialMillionaireForLife(),
             scrapeCanadaLotteries(),
             scrapeAustraliaLotteries(),
-            scrapeEuropeLotteries()
+            scrapeEuropeLotteries(),
+            scrapeNewZealandLotteries(),
+            scrapeSouthAfricaLotteries()
         ]);
 
         const nationalUpdates = [pbSync, mmSync, mflSync].filter(Boolean);
@@ -84,7 +88,15 @@ export async function GET(request: NextRequest) {
         const totalStatesUpdated = stateResults.reduce((acc, r) => acc + (r.updatedCount || 0), 0);
 
         // Always refresh key global listing routes if any update landed
-        if (totalStatesUpdated > 0 || canadaSync.updatedCount > 0 || auSync.updatedCount > 0 || europeSync.updatedCount > 0 || nationalUpdates.some(u => u?.updated)) {
+        if (
+            totalStatesUpdated > 0 ||
+            canadaSync.updatedCount > 0 ||
+            auSync.updatedCount > 0 ||
+            europeSync.updatedCount > 0 ||
+            nzSync.updatedCount > 0 ||
+            zaSync.updatedCount > 0 ||
+            nationalUpdates.some(u => u?.updated)
+        ) {
             try {
                 revalidatePath('/');
                 revalidatePath('/live-results');
@@ -111,6 +123,8 @@ export async function GET(request: NextRequest) {
             canadaSync,
             australiaSync: auSync,
             europeSync,
+            newZealandSync: nzSync,
+            southAfricaSync: zaSync,
             stateSync: stateResults
         });
 
