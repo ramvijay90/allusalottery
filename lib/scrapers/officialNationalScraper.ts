@@ -2,6 +2,7 @@ import connectToDatabase from '@/lib/db';
 import Game from '@/models/Game';
 import Result from '@/models/Result';
 import { revalidatePath } from 'next/cache';
+import { parseDrawDateUtc, utcDateStr } from '@/lib/scrapers/syncUtils';
 
 export interface SyncResult {
     game: string;
@@ -12,9 +13,104 @@ export interface SyncResult {
     syncedStatesCount: number;
 }
 
+async function syncMultiStateDraw(opts: {
+    gameName: string;
+    slugRegex: string | RegExp;
+    rawDateStr: string;
+    numbers: string[];
+    specialBall: string;
+    revalidatePaths: string[];
+}): Promise<SyncResult | null> {
+    const drawDate = parseDrawDateUtc(opts.rawDateStr);
+    if (!drawDate || opts.numbers.length === 0) return null;
+
+    const cleanDate = utcDateStr(drawDate);
+    await connectToDatabase();
+
+    const masterGame = await Game.findOne({ slug: opts.slugRegex }).sort({ lastDrawDate: -1 });
+    const existingLastDate = masterGame?.lastDrawDate ? utcDateStr(new Date(masterGame.lastDrawDate)) : null;
+
+    // Check if any matching state still has older lastDrawDate (keeps all participating states aligned)
+    const staleCount = await Game.countDocuments({
+        slug: opts.slugRegex,
+        $or: [
+            { lastDrawDate: { $lt: new Date(`${cleanDate}T00:00:00.000Z`) } },
+            { lastDrawDate: { $exists: false } }
+        ]
+    });
+
+    const isNew = !existingLastDate || cleanDate > existingLastDate || staleCount > 0;
+
+    if (isNew) {
+        const updateResult = await Game.updateMany(
+            { slug: opts.slugRegex },
+            {
+                $set: {
+                    numbers: opts.numbers,
+                    powerBall: opts.specialBall,
+                    lastDrawDate: drawDate
+                }
+            }
+        );
+
+        const allGames = await Game.find({ slug: opts.slugRegex }).select('_id');
+        const dayStart = new Date(`${cleanDate}T00:00:00.000Z`);
+        const dayEnd = new Date(`${cleanDate}T23:59:59.999Z`);
+
+        // Remove any midnight/misaligned same-day duplicates first or upsert cleanly at noon UTC
+        const gameIds = allGames.map(g => g._id);
+        await Result.deleteMany({
+            gameId: { $in: gameIds },
+            date: { $gte: dayStart, $lte: dayEnd, $ne: drawDate }
+        });
+
+        const resultBulk = allGames.map(g => ({
+            updateOne: {
+                filter: { gameId: g._id, date: drawDate },
+                update: {
+                    $set: {
+                        gameId: g._id,
+                        date: drawDate,
+                        numbers: opts.numbers,
+                        powerBall: opts.specialBall
+                    }
+                },
+                upsert: true
+            }
+        }));
+
+        if (resultBulk.length > 0) {
+            await Result.bulkWrite(resultBulk);
+        }
+
+        for (const p of opts.revalidatePaths) {
+            try {
+                revalidatePath(p);
+            } catch (_) {}
+        }
+
+        return {
+            game: opts.gameName,
+            drawDate: cleanDate,
+            numbers: opts.numbers,
+            specialBall: opts.specialBall,
+            updated: true,
+            syncedStatesCount: updateResult.modifiedCount || allGames.length
+        };
+    }
+
+    return {
+        game: opts.gameName,
+        drawDate: cleanDate,
+        numbers: opts.numbers,
+        specialBall: opts.specialBall,
+        updated: false,
+        syncedStatesCount: 0
+    };
+}
+
 /**
- * 1. Powerball Official Open Data Sync
- * Source: NY State Official Open Data Portal (Public Government API, Free, No Auth)
+ * 1. Powerball Official Open Data Sync (NY State Open Data Portal, $0/mo)
  */
 export async function syncOfficialPowerball(): Promise<SyncResult | null> {
     try {
@@ -26,82 +122,32 @@ export async function syncOfficialPowerball(): Promise<SyncResult | null> {
         if (!Array.isArray(data) || data.length === 0) return null;
 
         const latest = data[0];
-        // Format: "07 09 27 40 58 19" (first 5 white balls, last is Powerball)
-        const parts = latest.winning_numbers.trim().split(/\s+/);
+        const parts = (latest.winning_numbers || '').trim().split(/\s+/).filter(Boolean);
         if (parts.length < 6) return null;
 
-        const numbers = parts.slice(0, 5);
-        const powerBall = parts[5];
-        const rawDate = latest.draw_date.split('T')[0];
-        const drawDate = new Date(`${rawDate}T12:00:00Z`);
-
-        await connectToDatabase();
-
-        // Check if master already has this draw
-        const masterPowerball = await Game.findOne({ slug: 'powerball', stateSlug: 'az' });
-        const existingLastDate = masterPowerball?.lastDrawDate ? new Date(masterPowerball.lastDrawDate).toISOString().split('T')[0] : null;
-
-        const isNew = !existingLastDate || rawDate > existingLastDate;
-
-        if (isNew) {
-            // 1. Update all Powerball games across all 45+ states
-            const updateResult = await Game.updateMany(
-                { slug: 'powerball' },
-                {
-                    $set: {
-                        numbers,
-                        powerBall,
-                        lastDrawDate: drawDate
-                    }
-                }
-            );
-
-            // 2. Insert into Result collection for all matching state games
-            const allPowerballGames = await Game.find({ slug: 'powerball' }).select('_id stateSlug');
-            const resultBulk = allPowerballGames.map(g => ({
-                updateOne: {
-                    filter: { gameId: g._id, date: drawDate },
-                    update: {
-                        $set: {
-                            gameId: g._id,
-                            date: drawDate,
-                            numbers,
-                            powerBall
-                        }
-                    },
-                    upsert: true
-                }
-            }));
-
-            if (resultBulk.length > 0) {
-                await Result.bulkWrite(resultBulk);
+        // Also sync Powerball Double Play if present in the NY Open Data payload
+        if (latest.double_play_winning_numbers) {
+            const dpParts = String(latest.double_play_winning_numbers).trim().split(/\s+/).filter(Boolean);
+            if (dpParts.length >= 6) {
+                await syncMultiStateDraw({
+                    gameName: 'Powerball Double Play',
+                    slugRegex: 'powerball-double-play',
+                    rawDateStr: latest.draw_date,
+                    numbers: dpParts.slice(0, 5),
+                    specialBall: dpParts[5],
+                    revalidatePaths: ['/results/ny/powerball-double-play', '/results/az/powerball-double-play', '/results/fl/powerball-double-play']
+                });
             }
-
-            // 3. Revalidate paths
-            try {
-                revalidatePath('/');
-                revalidatePath('/live-results');
-                revalidatePath('/results/az/powerball');
-            } catch (_) {}
-
-            return {
-                game: 'Powerball',
-                drawDate: rawDate,
-                numbers,
-                specialBall: powerBall,
-                updated: true,
-                syncedStatesCount: updateResult.modifiedCount || allPowerballGames.length
-            };
         }
 
-        return {
-            game: 'Powerball',
-            drawDate: rawDate,
-            numbers,
-            specialBall: powerBall,
-            updated: false,
-            syncedStatesCount: 0
-        };
+        return await syncMultiStateDraw({
+            gameName: 'Powerball',
+            slugRegex: 'powerball',
+            rawDateStr: latest.draw_date,
+            numbers: parts.slice(0, 5),
+            specialBall: parts[5],
+            revalidatePaths: ['/', '/live-results', '/results/az/powerball', '/results/ny/powerball', '/results/ca/powerball', '/results/tx/powerball']
+        });
     } catch (err: any) {
         console.error('Error in syncOfficialPowerball:', err.message);
         return null;
@@ -109,8 +155,7 @@ export async function syncOfficialPowerball(): Promise<SyncResult | null> {
 }
 
 /**
- * 2. Mega Millions Official Open Data Sync
- * Source: NY State Official Open Data Portal (Public Government API, Free, No Auth)
+ * 2. Mega Millions Official Open Data Sync (NY State Open Data Portal, $0/mo)
  */
 export async function syncOfficialMegaMillions(): Promise<SyncResult | null> {
     try {
@@ -122,75 +167,18 @@ export async function syncOfficialMegaMillions(): Promise<SyncResult | null> {
         if (!Array.isArray(data) || data.length === 0) return null;
 
         const latest = data[0];
-        // Format: "32 35 48 58 61", mega_ball: "21"
-        const numbers = latest.winning_numbers.trim().split(/\s+/);
+        const numbers = (latest.winning_numbers || '').trim().split(/\s+/).filter(Boolean);
         const megaBall = latest.mega_ball ? latest.mega_ball.trim() : '';
-        const rawDate = latest.draw_date.split('T')[0];
-        const drawDate = new Date(`${rawDate}T12:00:00Z`);
+        if (numbers.length < 5) return null;
 
-        await connectToDatabase();
-
-        const masterMega = await Game.findOne({ slug: 'mega-millions', stateSlug: 'az' });
-        const existingLastDate = masterMega?.lastDrawDate ? new Date(masterMega.lastDrawDate).toISOString().split('T')[0] : null;
-
-        const isNew = !existingLastDate || rawDate > existingLastDate;
-
-        if (isNew) {
-            const updateResult = await Game.updateMany(
-                { slug: 'mega-millions' },
-                {
-                    $set: {
-                        numbers,
-                        powerBall: megaBall,
-                        lastDrawDate: drawDate
-                    }
-                }
-            );
-
-            const allMegaGames = await Game.find({ slug: 'mega-millions' }).select('_id stateSlug');
-            const resultBulk = allMegaGames.map(g => ({
-                updateOne: {
-                    filter: { gameId: g._id, date: drawDate },
-                    update: {
-                        $set: {
-                            gameId: g._id,
-                            date: drawDate,
-                            numbers,
-                            powerBall: megaBall
-                        }
-                    },
-                    upsert: true
-                }
-            }));
-
-            if (resultBulk.length > 0) {
-                await Result.bulkWrite(resultBulk);
-            }
-
-            try {
-                revalidatePath('/');
-                revalidatePath('/live-results');
-                revalidatePath('/results/az/mega-millions');
-            } catch (_) {}
-
-            return {
-                game: 'Mega Millions',
-                drawDate: rawDate,
-                numbers,
-                specialBall: megaBall,
-                updated: true,
-                syncedStatesCount: updateResult.modifiedCount || allMegaGames.length
-            };
-        }
-
-        return {
-            game: 'Mega Millions',
-            drawDate: rawDate,
+        return await syncMultiStateDraw({
+            gameName: 'Mega Millions',
+            slugRegex: 'mega-millions',
+            rawDateStr: latest.draw_date,
             numbers,
             specialBall: megaBall,
-            updated: false,
-            syncedStatesCount: 0
-        };
+            revalidatePaths: ['/', '/live-results', '/results/az/mega-millions', '/results/ny/mega-millions', '/results/ca/mega-millions']
+        });
     } catch (err: any) {
         console.error('Error in syncOfficialMegaMillions:', err.message);
         return null;
@@ -198,12 +186,12 @@ export async function syncOfficialMegaMillions(): Promise<SyncResult | null> {
 }
 
 /**
- * 3. Cash4Life Official Open Data Sync
- * Multi-state game played daily in FL, NY, NJ, PA, VA, GA, MD, IN, TN, MO
+ * 3. Millionaire for Life (succeeded retired Cash4Life in 2026) Official Open Data Sync
+ * Dataset ID a4w9-a3tp (NY State Open Data Portal, $0/mo)
  */
-export async function syncOfficialCash4Life(): Promise<SyncResult | null> {
+export async function syncOfficialMillionaireForLife(): Promise<SyncResult | null> {
     try {
-        const url = 'https://data.ny.gov/resource/h4i2-acfi.json?$limit=3&$order=draw_date%20DESC';
+        const url = 'https://data.ny.gov/resource/a4w9-a3tp.json?$limit=3&$order=draw_date%20DESC';
         const res = await fetch(url, { next: { revalidate: 0 }, headers: { 'User-Agent': 'AllUSALottery-Bot/1.0' } });
         if (!res.ok) return null;
 
@@ -211,74 +199,23 @@ export async function syncOfficialCash4Life(): Promise<SyncResult | null> {
         if (!Array.isArray(data) || data.length === 0) return null;
 
         const latest = data[0];
-        const parts = latest.winning_numbers.trim().split(/\s+/);
-        if (parts.length < 5) return null;
+        const numbers = (latest.winning_numbers || '').trim().split(/\s+/).filter(Boolean);
+        const millBall = latest.mill_ball ? String(latest.mill_ball).trim() : '';
+        if (numbers.length < 5) return null;
 
-        const numbers = parts.slice(0, 5);
-        const cashBall = latest.cash_ball ? latest.cash_ball.trim() : (parts[5] || '');
-        const rawDate = latest.draw_date.split('T')[0];
-        const drawDate = new Date(`${rawDate}T12:00:00Z`);
-
-        await connectToDatabase();
-
-        const masterC4L = await Game.findOne({ slug: { $regex: /cash-?4-?life/i } });
-        if (!masterC4L) return null;
-
-        const existingLastDate = masterC4L?.lastDrawDate ? new Date(masterC4L.lastDrawDate).toISOString().split('T')[0] : null;
-        const isNew = !existingLastDate || rawDate > existingLastDate;
-
-        if (isNew) {
-            const updateResult = await Game.updateMany(
-                { slug: { $regex: /cash-?4-?life/i } },
-                {
-                    $set: {
-                        numbers,
-                        powerBall: cashBall,
-                        lastDrawDate: drawDate
-                    }
-                }
-            );
-
-            const allC4LGames = await Game.find({ slug: { $regex: /cash-?4-?life/i } }).select('_id stateSlug');
-            const resultBulk = allC4LGames.map(g => ({
-                updateOne: {
-                    filter: { gameId: g._id, date: drawDate },
-                    update: {
-                        $set: {
-                            gameId: g._id,
-                            date: drawDate,
-                            numbers,
-                            powerBall: cashBall
-                        }
-                    },
-                    upsert: true
-                }
-            }));
-
-            if (resultBulk.length > 0) {
-                await Result.bulkWrite(resultBulk);
-            }
-
-            return {
-                game: 'Cash4Life',
-                drawDate: rawDate,
-                numbers,
-                specialBall: cashBall,
-                updated: true,
-                syncedStatesCount: updateResult.modifiedCount || allC4LGames.length
-            };
-        }
-
-        return {
-            game: 'Cash4Life',
-            drawDate: rawDate,
+        return await syncMultiStateDraw({
+            gameName: 'Millionaire for Life',
+            slugRegex: /^millionaire-for-life$|^cash-?4-?life$/i,
+            rawDateStr: latest.draw_date,
             numbers,
-            specialBall: cashBall,
-            updated: false,
-            syncedStatesCount: 0
-        };
+            specialBall: millBall,
+            revalidatePaths: ['/', '/live-results', '/results/ny/millionaire-for-life', '/results/ga/millionaire-for-life']
+        });
     } catch (err: any) {
-        console.error('Error in syncOfficialCash4Life:', err.message);
+        console.error('Error in syncOfficialMillionaireForLife:', err.message);
         return null;
     }
 }
+
+// Backward-compatible alias used by route imports
+export const syncOfficialCash4Life = syncOfficialMillionaireForLife;

@@ -2,22 +2,35 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/db';
 import Game from '@/models/Game';
 import Result from '@/models/Result';
-import { syncOfficialPowerball, syncOfficialMegaMillions, syncOfficialCash4Life } from '@/lib/scrapers/officialNationalScraper';
+import { syncOfficialPowerball, syncOfficialMegaMillions, syncOfficialMillionaireForLife } from '@/lib/scrapers/officialNationalScraper';
 import { scrapeCanadaLotteries } from '@/lib/scrapers/canadaScraper';
 import { scrapeAustraliaLotteries } from '@/lib/scrapers/australiaScraper';
 import { scrapeEuropeLotteries } from '@/lib/scrapers/europeScraper';
-import { scrapeStateFromLotteryUsa } from '@/lib/scrapers/lotteryUsaScraper';
+import { scrapeStateFromLotteryUsa, StateScrapeResult } from '@/lib/scrapers/lotteryUsaScraper';
+import { revalidatePath } from 'next/cache';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 45; // Max 45s within Hostinger 50s limit
+export const maxDuration = 45; // Stay safely under Hostinger 50s PHP limit
 
-// High-priority state rotation groups
-const STATE_BATCHES = [
-    ['az', 'ca', 'fl', 'tx', 'ny'], // Batch 0 (:00)
-    ['il', 'ga', 'nc', 'pa', 'oh'], // Batch 1 (:15)
-    ['mi', 'nj', 'va', 'wa', 'tn'], // Batch 2 (:30)
-    ['ma', 'md', 'co', 'mn', 'in'], // Batch 3 (:45)
+// All 47 US states & territories in DB rotated cleanly across 4 quarter-hour slots (100% hourly coverage)
+const STATE_BATCHES: string[][] = [
+    ['az', 'ca', 'fl', 'tx', 'ny', 'ar', 'co', 'ct', 'dc', 'de', 'ga', 'wy'], // Batch 0 (:00)
+    ['il', 'nc', 'pa', 'oh', 'ia', 'id', 'in', 'ks', 'ky', 'la', 'ma', 'md'], // Batch 1 (:15)
+    ['mi', 'nj', 'va', 'wa', 'tn', 'me', 'mn', 'mo', 'ms', 'mt', 'nd', 'ne'], // Batch 2 (:30)
+    ['nh', 'nm', 'ok', 'or', 'pr', 'ri', 'sc', 'sd', 'vt', 'wi', 'wv'],       // Batch 3 (:45)
 ];
+
+const ALL_US_STATES = STATE_BATCHES.flat();
+
+async function scrapeStatesConcurrently(stateSlugs: string[], concurrency = 4): Promise<StateScrapeResult[]> {
+    const results: StateScrapeResult[] = [];
+    for (let i = 0; i < stateSlugs.length; i += concurrency) {
+        const chunk = stateSlugs.slice(i, i + concurrency);
+        const chunkRes = await Promise.all(chunk.map(st => scrapeStateFromLotteryUsa(st)));
+        results.push(...chunkRes);
+    }
+    return results;
+}
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -29,54 +42,59 @@ export async function GET(request: NextRequest) {
     }
 
     const startTime = Date.now();
-    const specificState = searchParams.get('state'); // e.g. ?state=az or ?state=all
+    const specificState = searchParams.get('state'); // ?state=az or ?state=all
     const skipStates = searchParams.get('skip_states') === 'true';
 
     try {
         await connectToDatabase();
 
-        // 1. Sync Official US National, Canada, Australia, and UK & Europe Lotteries
-        const [pbSync, mmSync, c4lSync, canadaSync, auSync, europeSync] = await Promise.all([
+        // 1. Sync Official US National, Canada, Australia, and UK & Europe Lotteries concurrently
+        const [pbSync, mmSync, mflSync, canadaSync, auSync, europeSync] = await Promise.all([
             syncOfficialPowerball(),
             syncOfficialMegaMillions(),
-            syncOfficialCash4Life(),
+            syncOfficialMillionaireForLife(),
             scrapeCanadaLotteries(),
             scrapeAustraliaLotteries(),
             scrapeEuropeLotteries()
         ]);
 
-        const nationalUpdates = [pbSync, mmSync, c4lSync].filter(Boolean);
+        const nationalUpdates = [pbSync, mmSync, mflSync].filter(Boolean);
 
-        // 2. Sync Local State Games from LotteryUSA
-        const stateResults: any[] = [];
+        // 2. Sync US Local State Games from LotteryCorner + NY Open Data
+        let stateResults: StateScrapeResult[] = [];
 
         if (!skipStates) {
             let targetStates: string[] = [];
 
             if (specificState) {
                 if (specificState === 'all') {
-                    // Top 10 major states if 'all' requested via web to stay under timeout
-                    targetStates = ['az', 'ca', 'fl', 'tx', 'ny', 'il', 'ga', 'pa', 'nc', 'oh'];
+                    targetStates = ALL_US_STATES;
                 } else {
                     targetStates = [specificState.toLowerCase().trim()];
                 }
             } else {
-                // Round-Robin Rotation based on current 15-minute slot
                 const currentMinute = new Date().getMinutes();
                 const batchIndex = Math.floor(currentMinute / 15) % STATE_BATCHES.length;
                 targetStates = STATE_BATCHES[batchIndex] || STATE_BATCHES[0];
             }
 
-            // Scrape target states sequentially (safe for connection pooling)
-            for (const st of targetStates) {
-                const res = await scrapeStateFromLotteryUsa(st);
-                stateResults.push(res);
-            }
+            stateResults = await scrapeStatesConcurrently(targetStates, 4);
         }
 
-        // 3. Database Summary Stats
-        const totalGames = await Game.countDocuments();
-        const totalResults = await Result.countDocuments();
+        const totalStatesUpdated = stateResults.reduce((acc, r) => acc + (r.updatedCount || 0), 0);
+
+        // Always refresh key global listing routes if any update landed
+        if (totalStatesUpdated > 0 || canadaSync.updatedCount > 0 || auSync.updatedCount > 0 || europeSync.updatedCount > 0 || nationalUpdates.some(u => u?.updated)) {
+            try {
+                revalidatePath('/');
+                revalidatePath('/live-results');
+            } catch (_) {}
+        }
+
+        const [totalGames, totalResults] = await Promise.all([
+            Game.countDocuments(),
+            Result.countDocuments()
+        ]);
 
         const durationMs = Date.now() - startTime;
 
@@ -90,9 +108,9 @@ export async function GET(request: NextRequest) {
                 totalResults
             },
             nationalSync: nationalUpdates,
-            canadaSync: canadaSync,
+            canadaSync,
             australiaSync: auSync,
-            europeSync: europeSync,
+            europeSync,
             stateSync: stateResults
         });
 

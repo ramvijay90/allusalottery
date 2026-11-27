@@ -4,8 +4,8 @@
  *
  * Runs as ONE single cron job in Hostinger, matching kz and ma setups.
  *
- * Hostinger Cron Entry:
- * * * * * * /usr/bin/php /home/u123444594/domains/allusalottery.com/public_html/api/master_cron.php >> /home/u123444594/domains/allusalottery.com/public_html/api/cron.log 2>&1
+ * Hostinger Cron Entry (every 5 minutes — adjust username/path to your Hostinger directory):
+ * */5 * * * * /usr/bin/php /home/YOUR_HOSTINGER_USER/domains/allusalottery.com/public_html/public/api/master_cron.php >> /home/YOUR_HOSTINGER_USER/domains/allusalottery.com/public_html/cron.log 2>&1
  */
 
 // 1. Strict Concurrency Lock (prevents process stacking & 120-process limit)

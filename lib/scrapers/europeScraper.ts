@@ -1,8 +1,8 @@
 import * as cheerio from 'cheerio';
 import connectToDatabase from '@/lib/db';
 import Game from '@/models/Game';
-import Result from '@/models/Result';
 import { revalidatePath } from 'next/cache';
+import { parseDrawDateUtc, upsertGameAndResult } from '@/lib/scrapers/syncUtils';
 
 export interface EuropeScrapeResult {
     totalScraped: number;
@@ -12,194 +12,63 @@ export interface EuropeScrapeResult {
 }
 
 export const ALL_EU_STATES = [
-    'eu',
-    'uk',
-    'uk-eng',
-    'uk-sct',
-    'uk-wls',
-    'uk-nir',
-    'ie',
-    'es',
-    'es-cat',
-    'it',
-    'fr',
-    'eu-de',
-    'de-by'
+    'eu', 'uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir',
+    'ie', 'es', 'es-cat', 'it', 'fr', 'eu-de', 'de-by'
 ];
 
 interface ParsedGameItem {
-    pattern: RegExp;
     targetSlug: string;
     stateSlugs: string[];
     name: string;
     drawDate: Date;
+    exactTimestamp?: boolean;
     numbers: string[];
     bonusBall?: string;
-    powerBall?: string;
 }
 
 const FEED_CONFIGS = [
-    {
-        url: 'https://www.lotteryextreme.com/uk/',
-        label: 'UK Feed'
-    },
-    {
-        url: 'https://www.lotteryextreme.com/ireland/',
-        label: 'Ireland Feed'
-    },
-    {
-        url: 'https://www.lotteryextreme.com/euromillions/',
-        label: 'EuroMillions Feed'
-    },
-    {
-        url: 'https://www.lotteryextreme.com/eurojackpot/',
-        label: 'EuroJackpot Feed'
-    },
-    {
-        url: 'https://www.lotteryextreme.com/eurodreams/',
-        label: 'EuroDreams Feed'
-    },
-    {
-        url: 'https://www.lotteryextreme.com/la-primitiva/',
-        label: 'Spain La Primitiva'
-    },
-    {
-        url: 'https://www.lotteryextreme.com/bonoloto/',
-        label: 'Spain Bonoloto'
-    },
-    {
-        url: 'https://www.lotteryextreme.com/superenalotto/',
-        label: 'Italy SuperEnalotto'
-    },
-    {
-        url: 'https://www.lotteryextreme.com/lotto_de/',
-        label: 'Germany Feed'
-    },
-    {
-        url: 'https://www.lotteryextreme.com/el-gordo-de-la-primitiva/',
-        label: 'Spain El Gordo'
-    },
-    {
-        url: 'https://www.lotteryextreme.com/lototurf/',
-        label: 'Spain Lototurf'
-    }
+    { url: 'https://www.lotteryextreme.com/uk/', label: 'UK Feed' },
+    { url: 'https://www.lotteryextreme.com/ireland/', label: 'Ireland Feed' },
+    { url: 'https://www.lotteryextreme.com/euromillions/', label: 'EuroMillions Feed' },
+    { url: 'https://www.lotteryextreme.com/eurojackpot/', label: 'EuroJackpot Feed' },
+    { url: 'https://www.lotteryextreme.com/eurodreams/', label: 'EuroDreams Feed' },
+    { url: 'https://www.lotteryextreme.com/la-primitiva/', label: 'Spain La Primitiva' },
+    { url: 'https://www.lotteryextreme.com/bonoloto/', label: 'Spain Bonoloto' },
+    { url: 'https://www.lotteryextreme.com/superenalotto/', label: 'Italy SuperEnalotto' },
+    { url: 'https://www.lotteryextreme.com/lotto_de/', label: 'Germany Feed' },
+    { url: 'https://www.lotteryextreme.com/el-gordo-de-la-primitiva/', label: 'Spain El Gordo' },
+    { url: 'https://www.lotteryextreme.com/lototurf/', label: 'Spain Lototurf' }
 ];
 
-// Map extracted titles to targets
 const GAME_ROUTING: { pattern: RegExp; targetSlug: string; stateSlugs: string[] }[] = [
-    // EuroMillions (Multi-country)
-    {
-        pattern: /euromillions\s*hotpicks/i,
-        targetSlug: 'euromillions-hotpicks',
-        stateSlugs: ['uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir']
-    },
-    {
-        pattern: /euromillions|euro\s*millions/i,
-        targetSlug: 'euromillions',
-        stateSlugs: ['eu', 'uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir', 'ie', 'es', 'es-cat', 'fr']
-    },
-    // EuroJackpot
-    {
-        pattern: /eurojackpot/i,
-        targetSlug: 'eurojackpot',
-        stateSlugs: ['eu', 'it', 'eu-de', 'de-by']
-    },
-    // EuroDreams
-    {
-        pattern: /eurodreams/i,
-        targetSlug: 'eurodreams',
-        stateSlugs: ['eu', 'ie', 'es', 'es-cat', 'fr']
-    },
-    // UK Games
-    {
-        pattern: /^lotto\s*hotpicks/i,
-        targetSlug: 'lotto-hotpicks',
-        stateSlugs: ['uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir']
-    },
-    {
-        pattern: /^lotto/i, // Will match UK Lotto from /uk/ or Irish Lotto from /ireland/
-        targetSlug: 'uk-lotto',
-        stateSlugs: ['uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir']
-    },
-    {
-        pattern: /thunderball/i,
-        targetSlug: 'thunderball',
-        stateSlugs: ['uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir']
-    },
-    {
-        pattern: /set\s*for\s*life/i,
-        targetSlug: 'set-for-life',
-        stateSlugs: ['uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir']
-    },
-    // Ireland Games
-    {
-        pattern: /lotto\s*plus\s*1/i,
-        targetSlug: 'lotto-plus-1',
-        stateSlugs: ['ie']
-    },
-    {
-        pattern: /lotto\s*plus\s*2/i,
-        targetSlug: 'lotto-plus-2',
-        stateSlugs: ['ie']
-    },
-    {
-        pattern: /daily\s*million\s*plus/i,
-        targetSlug: 'daily-million-plus',
-        stateSlugs: ['ie']
-    },
-    {
-        pattern: /daily\s*million/i,
-        targetSlug: 'daily-million',
-        stateSlugs: ['ie']
-    },
-    // Spain Games
-    {
-        pattern: /primitiva/i,
-        targetSlug: 'la-primitiva',
-        stateSlugs: ['es', 'es-cat']
-    },
-    {
-        pattern: /bonoloto/i,
-        targetSlug: 'bonoloto',
-        stateSlugs: ['es', 'es-cat']
-    },
-    {
-        pattern: /gordo/i,
-        targetSlug: 'el-gordo',
-        stateSlugs: ['es', 'es-cat']
-    },
-    {
-        pattern: /lototurf/i,
-        targetSlug: 'lototurf',
-        stateSlugs: ['es', 'es-cat']
-    },
-    // Italy Games
-    {
-        pattern: /superenalotto/i,
-        targetSlug: 'superenalotto',
-        stateSlugs: ['it']
-    },
-    // Germany Games
-    {
-        pattern: /lotto\s*6aus49|samstag\s*lotto|mittwoch\s*lotto/i,
-        targetSlug: 'lotto-6aus49',
-        stateSlugs: ['eu-de', 'de-by']
-    },
-    {
-        pattern: /germany\s*keno|keno\s*deutschland/i,
-        targetSlug: 'keno-germany',
-        stateSlugs: ['eu-de', 'de-by']
-    }
+    { pattern: /euromillions\s*hotpicks/i, targetSlug: 'euromillions-hotpicks', stateSlugs: ['uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir'] },
+    { pattern: /euromillions|euro\s*millions/i, targetSlug: 'euromillions', stateSlugs: ['eu', 'uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir', 'ie', 'es', 'es-cat', 'fr'] },
+    { pattern: /euro\s*jackpot/i, targetSlug: 'eurojackpot', stateSlugs: ['eu', 'it', 'eu-de', 'de-by'] },
+    { pattern: /euro\s*dreams/i, targetSlug: 'eurodreams', stateSlugs: ['eu', 'ie', 'es', 'es-cat', 'fr'] },
+    { pattern: /^lotto\s*hotpicks/i, targetSlug: 'lotto-hotpicks', stateSlugs: ['uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir'] },
+    { pattern: /^lotto\s*plus\s*1/i, targetSlug: 'lotto-plus-1', stateSlugs: ['ie'] },
+    { pattern: /^lotto\s*plus\s*2/i, targetSlug: 'lotto-plus-2', stateSlugs: ['ie'] },
+    { pattern: /lotto\s*6aus49|samstag\s*lotto|mittwoch\s*lotto|^lotto\s+(?:mittwoch|samstag)/i, targetSlug: 'lotto-6aus49', stateSlugs: ['eu-de', 'de-by'] },
+    { pattern: /^lotto(?:\s|$)/i, targetSlug: 'uk-lotto', stateSlugs: ['uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir'] },
+    { pattern: /thunderball/i, targetSlug: 'thunderball', stateSlugs: ['uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir'] },
+    { pattern: /set\s*for\s*life/i, targetSlug: 'set-for-life', stateSlugs: ['uk', 'uk-eng', 'uk-sct', 'uk-wls', 'uk-nir'] },
+    { pattern: /daily\s*million\s*plus/i, targetSlug: 'daily-million-plus', stateSlugs: ['ie'] },
+    { pattern: /daily\s*million/i, targetSlug: 'daily-million', stateSlugs: ['ie'] },
+    { pattern: /gordo/i, targetSlug: 'el-gordo', stateSlugs: ['es', 'es-cat'] },
+    { pattern: /primitiva/i, targetSlug: 'la-primitiva', stateSlugs: ['es', 'es-cat'] },
+    { pattern: /bonoloto/i, targetSlug: 'bonoloto', stateSlugs: ['es', 'es-cat'] },
+    { pattern: /lototurf/i, targetSlug: 'lototurf', stateSlugs: ['es', 'es-cat'] },
+    { pattern: /superenalotto/i, targetSlug: 'superenalotto', stateSlugs: ['it'] },
+    { pattern: /germany\s*keno|keno\s*deutschland/i, targetSlug: 'keno-germany', stateSlugs: ['eu-de', 'de-by'] }
 ];
 
 export async function scrapeEuropeLotteries(): Promise<EuropeScrapeResult> {
     const parsedItems: ParsedGameItem[] = [];
 
-    // Helper to fetch and parse with 5s timeout per feed
     const fetchPromises = FEED_CONFIGS.map(async (feed) => {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000);
+            const timeoutId = setTimeout(() => controller.abort(), 7000);
 
             const res = await fetch(feed.url, {
                 headers: {
@@ -220,21 +89,20 @@ export async function scrapeEuropeLotteries(): Promise<EuropeScrapeResult> {
                 const titleText = $(el).text().replace(/\s+/g, ' ').trim();
                 const xgm2 = $(el).next('.xgm2');
 
-                // Extract Date
-                let drawDate = new Date();
-                const dateMatchIso = titleText.match(/(\d{4}-\d{2}-\d{2})/);
-                if (dateMatchIso) {
-                    const parsed = new Date(dateMatchIso[1]);
-                    if (!isNaN(parsed.getTime())) drawDate = parsed;
-                } else {
-                    const dateMatchDmy = titleText.match(/(\d{1,2}\s+[A-Za-z]+\s+\d{4})/);
-                    if (dateMatchDmy) {
-                        const parsed = new Date(dateMatchDmy[1]);
-                        if (!isNaN(parsed.getTime())) drawDate = parsed;
-                    }
+                // Distinguish 2:00pm vs 9:00pm for Ireland Daily Million
+                let hourUtc = 12;
+                let exactTimestamp = false;
+                if (/2:00\s*pm/i.test(titleText)) {
+                    hourUtc = 14;
+                    exactTimestamp = true;
+                } else if (/9:00\s*pm/i.test(titleText)) {
+                    hourUtc = 21;
+                    exactTimestamp = true;
                 }
 
-                // Numbers & Bonus extraction
+                const drawDate = parseDrawDateUtc(titleText, hourUtc);
+                if (!drawDate) return;
+
                 const numbers: string[] = [];
                 const bonusParts: string[] = [];
                 let isBonus = false;
@@ -255,62 +123,55 @@ export async function scrapeEuropeLotteries(): Promise<EuropeScrapeResult> {
                     }
                 });
 
-                if (numbers.length > 0) {
-                    // Match to route
-                    for (const route of GAME_ROUTING) {
-                        if (route.pattern.test(titleText)) {
-                            // If it's Ireland feed and title is "Lotto", route to irish-lotto
-                            let targetSlug = route.targetSlug;
-                            let stateSlugs = route.stateSlugs;
-                            if (feed.url.includes('/ireland/') && targetSlug === 'uk-lotto') {
-                                targetSlug = 'irish-lotto';
-                                stateSlugs = ['ie', 'uk-nir'];
-                            }
+                if (numbers.length === 0) return;
 
-                            // Specific bonus/ball formatting
-                            let mainNumbers = numbers;
-                            let bonusBall = bonusParts.join(', ');
+                for (const route of GAME_ROUTING) {
+                    if (route.pattern.test(titleText)) {
+                        let targetSlug = route.targetSlug;
+                        let stateSlugs = route.stateSlugs;
 
-                            // Format SuperEnalotto: 6 main, 7th is Jolly, 8th is SuperStar
-                            if (targetSlug === 'superenalotto' && mainNumbers.length >= 8) {
-                                const main = mainNumbers.slice(0, 6);
-                                bonusBall = `Jolly: ${mainNumbers[6]}, SuperStar: ${mainNumbers[7]}`;
-                                mainNumbers = main;
-                            } else if (targetSlug === 'la-primitiva' && mainNumbers.length >= 8) {
-                                // 6 main, Complementario, Reintegro
-                                const main = mainNumbers.slice(0, 6);
-                                bonusBall = `Compl: ${mainNumbers[6]}, Reintegro: ${mainNumbers[7]}`;
-                                mainNumbers = main;
-                            } else if (targetSlug === 'bonoloto' && mainNumbers.length >= 8) {
-                                const main = mainNumbers.slice(0, 6);
-                                bonusBall = `Compl: ${mainNumbers[6]}, Reintegro: ${mainNumbers[7]}`;
-                                mainNumbers = main;
-                            } else if (targetSlug === 'lotto-6aus49' && mainNumbers.length >= 7) {
-                                const main = mainNumbers.slice(0, 6);
-                                bonusBall = `Superzahl: ${mainNumbers[6]}`;
-                                mainNumbers = main;
-                            } else if (targetSlug === 'uk-lotto' && bonusParts.length > 1) {
-                                // Only keep the single bonus ball (last one)
-                                bonusBall = bonusParts[bonusParts.length - 1];
-                            }
-
-                            parsedItems.push({
-                                pattern: route.pattern,
-                                targetSlug,
-                                stateSlugs,
-                                name: titleText.split(/[-–\n(]/)[0].trim(),
-                                drawDate,
-                                numbers: mainNumbers,
-                                bonusBall: bonusBall || undefined
-                            });
-                            break;
+                        if (feed.url.includes('/ireland/') && targetSlug === 'uk-lotto') {
+                            targetSlug = 'irish-lotto';
+                            stateSlugs = ['ie', 'uk-nir'];
+                        } else if (feed.url.includes('/lotto_de/') && targetSlug === 'uk-lotto') {
+                            targetSlug = 'lotto-6aus49';
+                            stateSlugs = ['eu-de', 'de-by'];
+                        } else if (feed.url.includes('/el-gordo-de-la-primitiva/') && /^\d/.test(titleText)) {
+                            // Dedicated El Gordo feed title omits game name ("22 noviembre 2026 ...")
+                            targetSlug = 'el-gordo';
+                            stateSlugs = ['es', 'es-cat'];
                         }
+
+                        let mainNumbers = numbers;
+                        let bonusBall = bonusParts.join(', ');
+
+                        if (targetSlug === 'superenalotto' && mainNumbers.length >= 8) {
+                            bonusBall = `Jolly: ${mainNumbers[6]}, SuperStar: ${mainNumbers[7]}`;
+                            mainNumbers = mainNumbers.slice(0, 6);
+                        } else if ((targetSlug === 'la-primitiva' || targetSlug === 'bonoloto') && mainNumbers.length >= 8) {
+                            bonusBall = `Compl: ${mainNumbers[6]}, Reintegro: ${mainNumbers[7]}`;
+                            mainNumbers = mainNumbers.slice(0, 6);
+                        } else if (targetSlug === 'lotto-6aus49' && mainNumbers.length >= 7) {
+                            bonusBall = `Superzahl: ${mainNumbers[6]}`;
+                            mainNumbers = mainNumbers.slice(0, 6);
+                        } else if (targetSlug === 'uk-lotto' && bonusParts.length > 1) {
+                            bonusBall = bonusParts[bonusParts.length - 1];
+                        }
+
+                        parsedItems.push({
+                            targetSlug,
+                            stateSlugs,
+                            name: titleText.split(/[-–\n(]/)[0].trim(),
+                            drawDate,
+                            exactTimestamp,
+                            numbers: mainNumbers,
+                            bonusBall: bonusBall || undefined
+                        });
+                        break;
                     }
                 }
             });
-
         } catch (feedErr: any) {
-            // Soft fail individual feed to keep scraping resilient
             console.warn(`[EuropeScraper] Feed warning for ${feed.label}:`, feedErr.message);
         }
     });
@@ -338,45 +199,24 @@ export async function scrapeEuropeLotteries(): Promise<EuropeScrapeResult> {
         });
 
         for (const gameDoc of matchingGames) {
-            const existingDateStr = gameDoc.lastDrawDate ? new Date(gameDoc.lastDrawDate).toISOString().split('T')[0] : '';
-            const incomingDateStr = item.drawDate.toISOString().split('T')[0];
-
-            if (!existingDateStr || incomingDateStr >= existingDateStr) {
-                gameDoc.numbers = item.numbers;
-                if (item.bonusBall) {
-                    gameDoc.bonusBall = item.bonusBall;
-                }
-                gameDoc.lastDrawDate = item.drawDate;
-                await gameDoc.save();
-
-                // Upsert into Result history collection
-                await Result.findOneAndUpdate(
-                    { gameId: gameDoc._id, date: item.drawDate },
-                    {
-                        $set: {
-                            gameId: gameDoc._id,
-                            date: item.drawDate,
-                            numbers: item.numbers,
-                            bonusBall: item.bonusBall || '',
-                            powerBall: '',
-                            jackpot: gameDoc.jackpot || ''
-                        }
-                    },
-                    { upsert: true }
-                );
-
+            const didUpdate = await upsertGameAndResult(gameDoc, {
+                drawDate: item.drawDate,
+                numbers: item.numbers,
+                bonusBall: item.bonusBall || '',
+                powerBall: '',
+                exactTimestamp: item.exactTimestamp
+            });
+            if (didUpdate) {
                 updatedCount++;
                 updatedGames.push(`${gameDoc.name} (${gameDoc.stateSlug.toUpperCase()})`);
             }
         }
     }
 
-    // Revalidate European state pages
     for (const st of ALL_EU_STATES) {
-        try {
-            revalidatePath(`/results/${st}`);
-        } catch (_) {}
+        try { revalidatePath(`/results/${st}`); } catch (_) {}
     }
+    try { revalidatePath('/live-results'); } catch (_) {}
 
     return {
         totalScraped: parsedItems.length,
