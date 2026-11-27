@@ -22,6 +22,7 @@ export default function LotteryChartNavigation({ stateSlug, gameSlug }: LotteryC
     { name: 'UK Lotto Chart', href: '/results/uk/uk-lotto', flag: '🇬🇧' },
     { name: 'NZ Powerball Chart', href: '/results/nz/nz-powerball', flag: '🇳🇿' },
     { name: 'SA PowerBall Chart', href: '/results/za/sa-powerball', flag: '🇿🇦' },
+    { name: 'Nigeria Mega Jackpot', href: '/results/ng/ng-mega-jackpot', flag: '🇳🇬' },
   ];
 
   // Top Popular States & Regions
@@ -31,6 +32,7 @@ export default function LotteryChartNavigation({ stateSlug, gameSlug }: LotteryC
     { name: 'New York', href: '/results/ny' },
     { name: 'New Zealand', href: '/results/nz' },
     { name: 'South Africa', href: '/results/za' },
+    { name: 'Nigeria', href: '/results/ng' },
     { name: 'Live Feeds', href: '/live-results' },
   ];
 

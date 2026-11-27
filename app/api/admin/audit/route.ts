@@ -17,6 +17,7 @@ const NOINDEX_HEADERS = {
 const RETIRED_SLUGS = new Set([
     'cash-4-life',
     'sa-daily-lotto-plus',
+    'ng-lotto-6-49',
     'scottish-childrens-lottery',
     'lotto-hotpicks',
     'daily-derby',

@@ -76,7 +76,7 @@ export default function LuckyNumberGeneratorMainPage() {
     { title: 'USA Lotteries (Powerball & Mega Millions)', filter: 'USA' },
     { title: 'Canada & Australia Lotteries', filter: 'Australia' },
     { title: 'Europe & UK Lotteries', filter: 'Europe' },
-    { title: 'New Zealand & South Africa (Africa) Lotteries', filter: 'NZ_ZA' },
+    { title: 'New Zealand & Africa (SA & Nigeria) Lotteries', filter: 'NZ_ZA' },
     { title: 'Digit Box, Straight & Custom Tools', filter: 'Global' },
   ];
 
@@ -149,7 +149,7 @@ export default function LuckyNumberGeneratorMainPage() {
               const catList = CATEGORIES.filter(c =>
                 c.region === reg.filter ||
                 (reg.filter === 'Australia' && (c.country === 'Canada' || c.region === 'Australia')) ||
-                (reg.filter === 'NZ_ZA' && (c.region === 'New Zealand' || c.region === 'South Africa'))
+                (reg.filter === 'NZ_ZA' && (c.region === 'New Zealand' || c.region === 'Africa'))
               );
               if (catList.length === 0) return null;
 

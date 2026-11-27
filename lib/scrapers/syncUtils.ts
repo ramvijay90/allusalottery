@@ -54,6 +54,19 @@ export function parseDrawDateUtc(rawText: string, hourUtc = 12): Date | null {
         if (dt) return dt;
     }
 
+    // 2b. Dashed DD-MM-YYYY format (e.g. "25-11-2026" on Nigeria feeds)
+    const dmyDash = text.match(/\b(\d{1,2})-(\d{1,2})-(\d{4})\b/);
+    if (dmyDash) {
+        const a = parseInt(dmyDash[1], 10);
+        const b = parseInt(dmyDash[2], 10);
+        const y = parseInt(dmyDash[3], 10);
+        // Prefer DD-MM-YYYY when b <= 12
+        const dt = b <= 12
+            ? makeValidUtcDate(y, b, a, hourUtc)
+            : makeValidUtcDate(y, a, b, hourUtc);
+        if (dt) return dt;
+    }
+
     // 3. DD Month YYYY (English or Spanish, e.g. "27 November 2026", "26 Nov 2026", "26 noviembre 2026")
     const dmyWord = text.match(/(\d{1,2})\s+(?:de\s+)?([A-Za-zñÑ]+),?\s+(\d{4})/);
     if (dmyWord) {

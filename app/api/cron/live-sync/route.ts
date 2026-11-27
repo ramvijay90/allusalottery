@@ -8,6 +8,7 @@ import { scrapeAustraliaLotteries } from '@/lib/scrapers/australiaScraper';
 import { scrapeEuropeLotteries } from '@/lib/scrapers/europeScraper';
 import { scrapeNewZealandLotteries } from '@/lib/scrapers/newZealandScraper';
 import { scrapeSouthAfricaLotteries } from '@/lib/scrapers/southAfricaScraper';
+import { scrapeNigeriaLotteries } from '@/lib/scrapers/nigeriaScraper';
 import { scrapeStateFromLotteryUsa, StateScrapeResult } from '@/lib/scrapers/lotteryUsaScraper';
 import { revalidatePath } from 'next/cache';
 
@@ -50,8 +51,8 @@ export async function GET(request: NextRequest) {
     try {
         await connectToDatabase();
 
-        // 1. Sync Official US National, Canada, Australia, UK & Europe, New Zealand, and South Africa Lotteries concurrently
-        const [pbSync, mmSync, mflSync, canadaSync, auSync, europeSync, nzSync, zaSync] = await Promise.all([
+        // 1. Sync Official US National, Canada, Australia, UK & Europe, New Zealand, South Africa, and Nigeria Lotteries concurrently
+        const [pbSync, mmSync, mflSync, canadaSync, auSync, europeSync, nzSync, zaSync, ngSync] = await Promise.all([
             syncOfficialPowerball(),
             syncOfficialMegaMillions(),
             syncOfficialMillionaireForLife(),
@@ -59,7 +60,8 @@ export async function GET(request: NextRequest) {
             scrapeAustraliaLotteries(),
             scrapeEuropeLotteries(),
             scrapeNewZealandLotteries(),
-            scrapeSouthAfricaLotteries()
+            scrapeSouthAfricaLotteries(),
+            scrapeNigeriaLotteries()
         ]);
 
         const nationalUpdates = [pbSync, mmSync, mflSync].filter(Boolean);
@@ -95,6 +97,7 @@ export async function GET(request: NextRequest) {
             europeSync.updatedCount > 0 ||
             nzSync.updatedCount > 0 ||
             zaSync.updatedCount > 0 ||
+            ngSync.updatedCount > 0 ||
             nationalUpdates.some(u => u?.updated)
         ) {
             try {
@@ -125,6 +128,7 @@ export async function GET(request: NextRequest) {
             europeSync,
             newZealandSync: nzSync,
             southAfricaSync: zaSync,
+            nigeriaSync: ngSync,
             stateSync: stateResults
         });
 

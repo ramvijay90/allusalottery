@@ -55,8 +55,8 @@ export default function MobileMenu() {
             <Link href="/?country=New Zealand#states" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
               New Zealand Lotteries
             </Link>
-            <Link href="/?country=South Africa#states" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
-              Africa • South Africa
+            <Link href="/?country=Africa#states" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
+              Africa (SA &amp; Nigeria)
             </Link>
             <Link href="/lucky-number-generator" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
               Lucky Number

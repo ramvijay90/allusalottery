@@ -94,38 +94,11 @@ export const STATE_ALIASES: Record<string, string> = {
   bavaria: 'de-by',
   nz: 'nz',
   newzealand: 'nz',
-  'nz-akl': 'nz-akl',
-  auckland: 'nz-akl',
-  'nz-wlg': 'nz-wlg',
-  wellington: 'nz-wlg',
-  'nz-can': 'nz-can',
-  canterbury: 'nz-can',
-  christchurch: 'nz-can',
-  'nz-wko': 'nz-wko',
-  waikato: 'nz-wko',
-  'nz-ota': 'nz-ota',
-  otago: 'nz-ota',
   za: 'za',
   southafrica: 'za',
-  africa: 'za',
-  'za-gp': 'za-gp',
-  gauteng: 'za-gp',
-  'za-wc': 'za-wc',
-  westerncape: 'za-wc',
-  'za-kzn': 'za-kzn',
-  kwazulunatal: 'za-kzn',
-  'za-ec': 'za-ec',
-  easterncape: 'za-ec',
-  'za-fs': 'za-fs',
-  freestate: 'za-fs',
-  'za-lp': 'za-lp',
-  limpopo: 'za-lp',
-  'za-mp': 'za-mp',
-  mpumalanga: 'za-mp',
-  'za-nw': 'za-nw',
-  northwest: 'za-nw',
-  'za-nc': 'za-nc',
-  northerncape: 'za-nc'
+  ng: 'ng',
+  nigeria: 'ng',
+  africa: 'za'
 };
 
 export const GAME_ALIASES: Record<string, string> = {
@@ -138,6 +111,8 @@ export const GAME_ALIASES: Record<string, string> = {
   'canada-lotto649': 'canada-lotto-6-49',
   'lotto-5-max': 'sa-lotto-plus-2',
   lotto5max: 'sa-lotto-plus-2',
+  megajackpot: 'ng-mega-jackpot',
+  'mega-jackpot': 'ng-mega-jackpot',
 };
 
 export function cleanJackpot(jackpotStr?: string): string {
@@ -154,7 +129,7 @@ export function cleanJackpot(jackpotStr?: string): string {
     return res;
   }
 
-  const regionalMatch = text.match(/(?:US\s?\$?|AU\s?\$?|NZ\s?\$?|ZAR\s?|R\s?(?=\d)|\$|£|€)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)?/i);
+  const regionalMatch = text.match(/(?:US\s?\$?|AU\s?\$?|NZ\s?\$?|ZAR\s?|NGN\s?|₦\s?|R\s?(?=\d)|\$|£|€)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)?/i);
   if (regionalMatch && regionalMatch[0].length >= 2) {
     return regionalMatch[0].trim();
   }
@@ -184,8 +159,8 @@ export const getGameData = cache(async (stateSlug: string, gameSlug: string) => 
     if (!game) return null;
 
     const isTopGame = !!game.jackpot || 
-                      ['powerball', 'megamillions', 'lottomax', 'powerball-australia', 'oz-lotto', 'nz-powerball', 'nz-lotto', 'sa-powerball', 'sa-lotto'].includes(game.slug.toLowerCase()) ||
-                      game.name.match(/Powerball|Mega Millions|Lotto Max|Oz Lotto|NZ Lotto|SA Lotto/i);
+                      ['powerball', 'megamillions', 'lottomax', 'powerball-australia', 'oz-lotto', 'nz-powerball', 'nz-lotto', 'sa-powerball', 'sa-lotto', 'ng-mega-jackpot'].includes(game.slug.toLowerCase()) ||
+                      game.name.match(/Powerball|Mega Millions|Lotto Max|Oz Lotto|NZ Lotto|SA Lotto|Mega Jackpot/i);
 
     let cutoffDate: Date;
     if (isTopGame) {

@@ -4,7 +4,7 @@ export interface LotteryCategory {
   id: string;
   name: string;
   country: string;
-  region: 'USA' | 'Europe' | 'Australia' | 'New Zealand' | 'South Africa' | 'Global' | 'Kerala';
+  region: 'USA' | 'Europe' | 'Australia' | 'New Zealand' | 'Africa' | 'Global' | 'Kerala';
   flag: string;
   mode: CategoryMode;
   mainBalls?: number;
@@ -633,12 +633,12 @@ export const CATEGORIES: LotteryCategory[] = [
     faqs: [{ question: 'How does NZ Keno work?', answer: 'Twenty numbers are drawn from 1 to 80 four times daily; players pick up to 10 spots.' }]
   },
 
-  // --- AFRICA -> SOUTH AFRICA LOTTERIES ---
+  // --- AFRICA (SOUTH AFRICA & NIGERIA) LOTTERIES ---
   {
     id: 'sa-lotto',
     name: 'SA Lotto',
     country: 'South Africa',
-    region: 'South Africa',
+    region: 'Africa',
     flag: '🇿🇦',
     mode: 'standard',
     mainBalls: 6,
@@ -656,7 +656,7 @@ export const CATEGORIES: LotteryCategory[] = [
     id: 'sa-powerball',
     name: 'SA PowerBall',
     country: 'South Africa',
-    region: 'South Africa',
+    region: 'Africa',
     flag: '🇿🇦',
     mode: 'standard',
     mainBalls: 5,
@@ -674,7 +674,7 @@ export const CATEGORIES: LotteryCategory[] = [
     id: 'sa-daily-lotto',
     name: 'SA Daily Lotto',
     country: 'South Africa',
-    region: 'South Africa',
+    region: 'Africa',
     flag: '🇿🇦',
     mode: 'standard',
     mainBalls: 5,
@@ -684,6 +684,24 @@ export const CATEGORIES: LotteryCategory[] = [
     h1Title: 'South Africa Daily Lotto Lucky Number Generator',
     keywords: ['sa daily lotto lucky number generator', 'daily lotto quick pick south africa', 'daily lotto 5/36 generator'],
     faqs: [{ question: 'How does SA Daily Lotto work?', answer: 'Selects 5 numbers from 1 to 36 drawn every night with guaranteed daily payouts.' }]
+  },
+  {
+    id: 'ng-mega-jackpot',
+    name: 'Nigeria Mega Jackpot',
+    country: 'Nigeria',
+    region: 'Africa',
+    flag: '🇳🇬',
+    mode: 'standard',
+    mainBalls: 5,
+    mainRange: [1, 50],
+    specialBalls: 2,
+    specialRange: [1, 12],
+    specialName: 'Power Numbers',
+    seoTitle: 'Nigeria Mega Jackpot Lucky Number Generator 2026 | Naija Lotto Picker',
+    seoDescription: 'Generate Nigeria Mega Jackpot numbers (5 main balls 1-50 + 2 bonus balls) for Wednesday and Saturday night draws.',
+    h1Title: 'Nigeria Mega Jackpot Lucky Number Generator',
+    keywords: ['nigeria mega jackpot generator', 'nigeria lotto lucky numbers', 'naija mega jackpot picker'],
+    faqs: [{ question: 'How does Nigeria Mega Jackpot work?', answer: 'Selects 5 main balls from 1 to 50 and 2 bonus numbers.' }]
   },
 
   // --- GENERAL NUMBER & CUSTOM PICKER ---

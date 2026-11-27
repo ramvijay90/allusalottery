@@ -21,6 +21,7 @@ export default function HomeSeoContent() {
     { name: 'EuroMillions Chart', href: '/results/eu/euromillions', flag: '🇪🇺', sub: 'Pan-Europe' },
     { name: 'NZ Powerball Chart', href: '/results/nz/nz-powerball', flag: '🇳🇿', sub: 'New Zealand' },
     { name: 'SA PowerBall Chart', href: '/results/za/sa-powerball', flag: '🇿🇦', sub: 'South Africa' },
+    { name: 'Nigeria Mega Jackpot', href: '/results/ng/ng-mega-jackpot', flag: '🇳🇬', sub: 'Nigeria' },
   ];
 
   const topStates = [
@@ -32,10 +33,8 @@ export default function HomeSeoContent() {
     { name: 'New South Wales', href: '/results/au-nsw', code: 'NSW' },
     { name: 'United Kingdom', href: '/results/uk', code: 'UK' },
     { name: 'New Zealand', href: '/results/nz', code: 'NZ' },
-    { name: 'Auckland Hub', href: '/results/nz-akl', code: 'AKL' },
     { name: 'South Africa', href: '/results/za', code: 'ZA' },
-    { name: 'Gauteng Hub', href: '/results/za-gp', code: 'GP' },
-    { name: 'Western Cape', href: '/results/za-wc', code: 'WC' },
+    { name: 'Nigeria National', href: '/results/ng', code: 'NG' },
   ];
 
   return (

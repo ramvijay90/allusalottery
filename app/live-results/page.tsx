@@ -21,7 +21,7 @@ function cleanJackpot(jackpotStr?: string): string {
     if (/^CA(?!\$)/i.test(res)) res = res.replace(/^CA/i, 'CA$');
     return res;
   }
-  const usMatch = text.match(/(?:US\s?\$?|AU\s?\$?|NZ\s?\$?|ZAR\s?|R\s?(?=\d)|\$|£|€)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)?/i);
+  const usMatch = text.match(/(?:US\s?\$?|AU\s?\$?|NZ\s?\$?|ZAR\s?|NGN\s?|₦\s?|R\s?(?=\d)|\$|£|€)\s*[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)?/i);
   if (usMatch && usMatch[0].length >= 2) return usMatch[0].trim();
   const millionMatch = text.match(/[\d,.]+\s*(?:Trillion|Billion|Million|Thousand)/i);
   if (millionMatch) return `$${millionMatch[0].trim()}`;
@@ -102,21 +102,8 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   'eu-de': 'GER',
   'de-by': 'BAY',
   nz: 'NZ',
-  'nz-akl': 'AKL',
-  'nz-wlg': 'WLG',
-  'nz-can': 'CAN',
-  'nz-wko': 'WKO',
-  'nz-ota': 'OTA',
   za: 'ZA',
-  'za-gp': 'GP',
-  'za-wc': 'WC',
-  'za-kzn': 'KZN',
-  'za-ec': 'EC',
-  'za-fs': 'FS',
-  'za-lp': 'LP',
-  'za-mp': 'MP',
-  'za-nw': 'NW',
-  'za-nc': 'NC'
+  ng: 'NG'
 };
 
 // Cache live results for 60 seconds (prevents process spikes under crawler traffic)
@@ -124,7 +111,7 @@ export const revalidate = 60;
 
 export const metadata = {
     title: 'Live Lottery Results Today & Tonight\'s Winning Numbers 2026 | Global Live',
-    description: 'Track official live lottery results today and tonight\'s winning numbers from USA 50 States, Canada, Australia, UK, Europe, New Zealand, and South Africa live.',
+    description: 'Track official live lottery results today and tonight\'s winning numbers from USA 50 States, Canada, Australia, UK, Europe, New Zealand, South Africa & Nigeria live.',
     alternates: {
         canonical: 'https://allusalottery.com/live-results',
     },

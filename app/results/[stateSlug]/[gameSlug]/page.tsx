@@ -26,7 +26,15 @@ function getCountrySeoContext(country?: string, stateSlug?: string) {
       federalNote: 'New Zealand Inland Revenue (IRD) does not tax casual lotto prize winnings.',
     };
   }
-  if (c === 'south africa') {
+  if (c === 'africa' || c === 'south africa') {
+    if (s === 'ng') {
+      return {
+        countryCode: 'NG',
+        currency: 'NGN',
+        ticketPrice: '100.00',
+        federalNote: 'Nigeria National Lottery prize payouts are exempt from withholding tax for individual ticket winners.',
+      };
+    }
     return {
       countryCode: 'ZA',
       currency: 'ZAR',
@@ -75,7 +83,7 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
 
     const currentYear = new Date().getFullYear();
     const stateDetails = getStateLotteryDetails(resolvedState);
-    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euromillions', 'euro-jackpot', 'eurojackpot', 'nz-powerball', 'nz-lotto', 'sa-powerball', 'sa-lotto'].includes(data.game.slug.toLowerCase());
+    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euromillions', 'euro-jackpot', 'eurojackpot', 'nz-powerball', 'nz-lotto', 'sa-powerball', 'sa-lotto', 'ng-mega-jackpot'].includes(data.game.slug.toLowerCase());
     const hasNumbers = Array.isArray(data.game.numbers) && data.game.numbers.length > 0;
     
     // Unique formula for EVERY state to eliminate Google deduplication
@@ -165,7 +173,7 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
         : 'Pending Official Draw';
 
     const currentYear = new Date().getFullYear();
-    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euromillions', 'euro-jackpot', 'eurojackpot', 'nz-powerball', 'nz-lotto', 'sa-powerball', 'sa-lotto'].includes(game.slug.toLowerCase());
+    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euromillions', 'euro-jackpot', 'eurojackpot', 'nz-powerball', 'nz-lotto', 'sa-powerball', 'sa-lotto', 'ng-mega-jackpot'].includes(game.slug.toLowerCase());
     const pageH1 = isMultiState
         ? `${state.name} ${game.name} Winning Numbers & Results ${currentYear}`
         : `${state.name} ${game.name} Winning Numbers Today`;

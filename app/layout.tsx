@@ -122,8 +122,8 @@ export default function RootLayout({
                 NEW ZEALAND
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
               </Link>
-              <Link href="/?country=South Africa#states" className="hover:text-[#0f172a] transition-colors relative group">
-                AFRICA (SA)
+              <Link href="/?country=Africa#states" className="hover:text-[#0f172a] transition-colors relative group">
+                AFRICA
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
               </Link>
               <Link href="/lucky-number-generator" className="hover:text-[#0f172a] transition-colors relative group">
@@ -160,7 +160,7 @@ export default function RootLayout({
                   ALL<span className="text-[#f59e0b]">USA</span>LOTTERY
                 </div>
                 <p className="text-slate-500 max-w-xs leading-relaxed font-medium">
-                  The professional destination for accurate, instant, and reliable lottery results across USA, Canada, Australia, UK, Europe, New Zealand &amp; South Africa.
+                  The professional destination for accurate, instant, and reliable lottery results across USA, Canada, Australia, UK, Europe, New Zealand &amp; Africa.
                 </p>
               </div>
               <div>
@@ -171,7 +171,7 @@ export default function RootLayout({
                   <li><Link href="/?country=Australia#states" className="hover:text-white transition-colors">Australia States</Link></li>
                   <li><Link href="/?country=Europe#states" className="hover:text-white transition-colors">UK &amp; Europe Results</Link></li>
                   <li><Link href="/?country=New Zealand#states" className="hover:text-white transition-colors">New Zealand Results</Link></li>
-                  <li><Link href="/?country=South Africa#states" className="hover:text-white transition-colors">Africa • South Africa</Link></li>
+                  <li><Link href="/?country=Africa#states" className="hover:text-white transition-colors">Africa (SA &amp; Nigeria)</Link></li>
                   <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
                   <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
                 </ul>

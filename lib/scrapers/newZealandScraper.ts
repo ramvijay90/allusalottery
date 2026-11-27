@@ -11,7 +11,7 @@ export interface NewZealandScrapeResult {
     error?: string;
 }
 
-export const ALL_NZ_STATES = ['nz', 'nz-akl', 'nz-wlg', 'nz-can', 'nz-wko', 'nz-ota'];
+export const ALL_NZ_STATES = ['nz'];
 
 interface ParsedNzItem {
     targetSlug: string;

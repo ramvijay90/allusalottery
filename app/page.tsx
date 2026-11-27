@@ -83,21 +83,8 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
   'eu-de': 'GER',
   'de-by': 'BAY',
   nz: 'NZ',
-  'nz-akl': 'AKL',
-  'nz-wlg': 'WLG',
-  'nz-can': 'CAN',
-  'nz-wko': 'WKO',
-  'nz-ota': 'OTA',
   za: 'ZA',
-  'za-gp': 'GP',
-  'za-wc': 'WC',
-  'za-kzn': 'KZN',
-  'za-ec': 'EC',
-  'za-fs': 'FS',
-  'za-lp': 'LP',
-  'za-mp': 'MP',
-  'za-nw': 'NW',
-  'za-nc': 'NC'
+  ng: 'NG'
 };
 
 // Cache homepage for 5 minutes (ISR) to keep process usage minimal
@@ -121,13 +108,13 @@ async function getStates(country?: string) {
         query.country = 'Europe';
       } else if (norm === 'newzealand' || norm === 'new zealand' || norm === 'nz') {
         query.country = 'New Zealand';
-      } else if (norm === 'southafrica' || norm === 'south africa' || norm === 'africa' || norm === 'za') {
-        query.country = 'South Africa';
+      } else if (norm === 'africa' || norm === 'southafrica' || norm === 'south africa' || norm === 'za' || norm === 'nigeria' || norm === 'ng') {
+        query.country = 'Africa';
       } else {
         query.country = country;
       }
     } else {
-      query.country = { $in: ['US', 'Canada', 'Australia', 'Europe', 'New Zealand', 'South Africa'] };
+      query.country = { $in: ['US', 'Canada', 'Australia', 'Europe', 'New Zealand', 'Africa'] };
     }
     
     // Sort by name

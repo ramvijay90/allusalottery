@@ -11,9 +11,7 @@ export interface SouthAfricaScrapeResult {
     error?: string;
 }
 
-export const ALL_ZA_STATES = [
-    'za', 'za-gp', 'za-wc', 'za-kzn', 'za-ec', 'za-fs', 'za-lp', 'za-mp', 'za-nw', 'za-nc'
-];
+export const ALL_ZA_STATES = ['za'];
 
 interface ParsedZaItem {
     targetSlug: string;

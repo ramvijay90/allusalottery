@@ -10,6 +10,7 @@ import { scrapeAustraliaLotteries } from '@/lib/scrapers/australiaScraper';
 import { scrapeEuropeLotteries, ALL_EU_STATES } from '@/lib/scrapers/europeScraper';
 import { scrapeNewZealandLotteries, ALL_NZ_STATES } from '@/lib/scrapers/newZealandScraper';
 import { scrapeSouthAfricaLotteries, ALL_ZA_STATES } from '@/lib/scrapers/southAfricaScraper';
+import { scrapeNigeriaLotteries, ALL_NG_STATES } from '@/lib/scrapers/nigeriaScraper';
 import { scrapeStateFromLotteryUsa } from '@/lib/scrapers/lotteryUsaScraper';
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,7 @@ const CA_STATES = new Set(['ac', 'bc', 'on', 'qc', 'wc']);
 const EU_STATES = new Set(ALL_EU_STATES);
 const NZ_STATES = new Set(ALL_NZ_STATES);
 const ZA_STATES = new Set(ALL_ZA_STATES);
+const NG_STATES = new Set(ALL_NG_STATES);
 
 export async function POST(req: NextRequest) {
     const session = await getServerSession(authOptions);
@@ -47,6 +49,7 @@ export async function POST(req: NextRequest) {
                     $nin: [
                         'cash-4-life',
                         'sa-daily-lotto-plus',
+                        'ng-lotto-6-49',
                         'scottish-childrens-lottery',
                         'lotto-hotpicks',
                         'daily-derby',
@@ -64,10 +67,10 @@ export async function POST(req: NextRequest) {
             });
 
             const usStates = (missingOrStaleStates as string[]).filter(
-                (st) => !AU_STATES.has(st) && !CA_STATES.has(st) && !EU_STATES.has(st) && !NZ_STATES.has(st) && !ZA_STATES.has(st)
+                (st) => !AU_STATES.has(st) && !CA_STATES.has(st) && !EU_STATES.has(st) && !NZ_STATES.has(st) && !ZA_STATES.has(st) && !NG_STATES.has(st)
             ).slice(0, 12);
 
-            const [pb, mm, mfl, ca, au, eu, nz, za] = await Promise.all([
+            const [pb, mm, mfl, ca, au, eu, nz, za, ng] = await Promise.all([
                 syncOfficialPowerball(),
                 syncOfficialMegaMillions(),
                 syncOfficialMillionaireForLife(),
@@ -75,7 +78,8 @@ export async function POST(req: NextRequest) {
                 scrapeAustraliaLotteries(),
                 scrapeEuropeLotteries(),
                 scrapeNewZealandLotteries(),
-                scrapeSouthAfricaLotteries()
+                scrapeSouthAfricaLotteries(),
+                scrapeNigeriaLotteries()
             ]);
 
             const usResults = await Promise.all(usStates.map((st) => scrapeStateFromLotteryUsa(st)));
@@ -86,6 +90,7 @@ export async function POST(req: NextRequest) {
                 (eu.updatedCount || 0) +
                 (nz.updatedCount || 0) +
                 (za.updatedCount || 0) +
+                (ng.updatedCount || 0) +
                 usResults.reduce((acc, r) => acc + (r.updatedCount || 0), 0);
 
             try {
@@ -99,7 +104,7 @@ export async function POST(req: NextRequest) {
                 mode: 'all_missing',
                 totalUpdated,
                 usStatesScanned: usStates,
-                details: { pb, mm, mfl, ca, au, eu, nz, za, usResults },
+                details: { pb, mm, mfl, ca, au, eu, nz, za, ng, usResults },
                 durationMs: Date.now() - startTime
             }, { headers: NOINDEX_HEADERS });
         }
@@ -115,6 +120,8 @@ export async function POST(req: NextRequest) {
             result = await scrapeNewZealandLotteries();
         } else if (ZA_STATES.has(st)) {
             result = await scrapeSouthAfricaLotteries();
+        } else if (NG_STATES.has(st)) {
+            result = await scrapeNigeriaLotteries();
         } else if (AU_STATES.has(st)) {
             result = await scrapeAustraliaLotteries();
         } else if (CA_STATES.has(st)) {
