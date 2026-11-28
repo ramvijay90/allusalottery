@@ -340,6 +340,7 @@ export default function AdminAuditPage() {
                     <option value="State Hub">State/Region Hubs</option>
                     <option value="Past History">Past History</option>
                     <option value="Visual Chart">Visual Charts</option>
+                    <option value="Lucky Numbers">Game Lucky Numbers</option>
                     <option value="Generator">Lucky Generators</option>
                     <option value="Admin/Noindex">Admin / Noindex</option>
                 </select>

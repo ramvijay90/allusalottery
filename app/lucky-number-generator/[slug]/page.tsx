@@ -29,6 +29,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
   const url = `https://allusalottery.com/lucky-number-generator/${category.id}`;
 
+  const ogImg = `/lucky-number-generator/${category.id}/opengraph-image`;
+
   return {
     title: category.seoTitle,
     description: category.seoDescription,
@@ -40,7 +42,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       title: category.seoTitle,
       description: category.seoDescription,
       url,
-      images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+      images: [{ url: ogImg, width: 1200, height: 630, alt: category.seoTitle }],
       type: 'website',
       siteName: 'All USA Lottery',
     },
@@ -48,7 +50,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
       card: 'summary_large_image',
       title: category.seoTitle,
       description: category.seoDescription,
-      images: ['/og-image.png'],
+      images: [ogImg],
     },
   };
 }

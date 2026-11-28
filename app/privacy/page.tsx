@@ -1,3 +1,11 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | All USA Lottery',
+  description: 'Read the Privacy Policy for AllUSALottery.com covering cookies, analytics, AdSense advertising, and visitor privacy rights.',
+  alternates: { canonical: 'https://allusalottery.com/privacy' },
+};
+
 export default function PrivacyPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">

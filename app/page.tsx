@@ -189,8 +189,8 @@ async function getTopJackpots() {
 }
 
 export const metadata = {
-  title: 'USA Lottery Results Today & Winning Numbers 2026 | All States Live',
-  description: 'Official USA lottery results today, live winning numbers, Powerball, Mega Millions, and all 50 state lotteries. Fast, verified drawings updated in real-time.',
+  title: 'USA & Global Lottery Results Today 2026 | Live & Charts',
+  description: 'Official USA, Canada, UK, Europe, Australia, NZ & Africa lottery results today. Live Powerball, Mega Millions, Pick 3/4, Lotto Max & 2026 draw charts.',
   alternates: {
     canonical: 'https://allusalottery.com',
   },
@@ -198,24 +198,36 @@ export const metadata = {
     'USA lottery results today',
     'lottery winning numbers 2026',
     'Powerball winning numbers',
-    'Mega Millions results',
+    'Mega Millions past winning numbers',
+    'numbers for the last 6 months',
     'state lottery results live',
+    'Pick 3 Pick 4 Cash 5 winning numbers',
+    'Lotto Max OLG WCLC BCLC Loto-Quebec ALC',
+    'Lotto 649 past results',
+    'The Lott Powerball Australia Oz Lotto',
+    'TattsLotto Saturday Lotto Weekday Windfall',
+    'EuroMillions UK National Lottery Thunderball',
+    'EuroJackpot Irish Lotto SuperEnalotto FDJ Loto',
+    'MyLotto NZ Powerball Strike Keno',
+    'Ithuba SA PowerBall Daily Lotto results',
+    'Nigeria Mega Jackpot lottery results today',
+    'lottery chart 2026',
     'tonight\'s lottery numbers',
     'allusalottery'
   ],
   openGraph: {
-    title: 'USA Lottery Results Today & Winning Numbers 2026',
-    description: 'Real-time winning numbers and jackpots for Powerball, Mega Millions, and all 50 US State lotteries.',
+    title: 'USA & Global Lottery Results Today 2026 | Live & Charts',
+    description: 'Real-time winning numbers, 2026 charts, and jackpots for Powerball, Mega Millions, all US states, Canada, UK, Europe, Australia, NZ & Africa.',
     url: 'https://allusalottery.com',
-    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'All USA Lottery Live Results & 2026 Charts' }],
     type: 'website',
     siteName: 'All USA Lottery',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'USA Lottery Results Today & Winning Numbers 2026',
-    description: 'Check official winning numbers and jackpots live.',
-    images: ['/og-image.png'],
+    title: 'USA & Global Lottery Results Today 2026',
+    description: 'Check official winning numbers, 2026 charts, and jackpots live.',
+    images: ['/opengraph-image'],
   }
 };
 
@@ -241,10 +253,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     '@type': 'Organization',
     'name': 'All USA Lottery',
     'url': 'https://allusalottery.com',
-    'logo': 'https://allusalottery.com/og-image.png',
-    'sameAs': [
-      'https://twitter.com/allusalottery'
-    ]
+    'logo': 'https://allusalottery.com/opengraph-image'
   };
 
   const faqSchema = {
@@ -318,8 +327,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             <span className="text-[#f59e0b]">Live Winning Numbers</span>
           </h1>
           <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-medium">
-            The professional destination for US & Canada lottery results. 
-            Real-time data for Powerball, Mega Millions, and all state games.
+            Verified live lottery results, 2026 visual charts &amp; overdue number analysis for USA, Canada, UK, Europe, Australia, New Zealand &amp; Africa.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="#states" className="bg-[#f59e0b] hover:bg-amber-500 text-[#0f172a] px-8 py-4 rounded-xl font-black transition-all shadow-xl shadow-amber-900/40 active:scale-95 flex items-center gap-2">

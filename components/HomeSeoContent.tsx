@@ -3,25 +3,25 @@ import { Calendar, Clock, Download, Flame, HelpCircle, ShieldCheck, Sparkles, Tr
 
 export default function HomeSeoContent() {
   const schedule = [
-    { day: 'Monday', games: ['Powerball (US$)', 'Lotto America', 'Cash4Life'], time: '10:59 PM EST', prize: '$20M - $1B+' },
-    { day: 'Tuesday', games: ['Mega Millions (US$)', 'Lotto Max (CA$)', 'Lucky for Life'], time: '11:00 PM EST', prize: '$20M - $1B+' },
-    { day: 'Wednesday', games: ['Powerball (US$)', 'Canada Lotto 6/49', 'Classic Lotto'], time: '10:59 PM EST', prize: '$20M - $1B+' },
-    { day: 'Thursday', games: ['Daily Grand (CA$)', 'Cash4Life', 'Lucky for Life'], time: '10:30 PM EST', prize: '$1,000/Day for Life' },
-    { day: 'Friday', games: ['Mega Millions (US$)', 'Lotto Max (CA$)', 'Cash4Life'], time: '11:00 PM EST', prize: '$20M - $1B+' },
-    { day: 'Saturday', games: ['Powerball (US$)', 'Canada Lotto 6/49', 'Lotto America'], time: '10:59 PM EST', prize: '$20M - $1B+' },
-    { day: 'Sunday', games: ['Cash4Life', 'Lucky for Life', 'Daily State Games'], time: '9:00 PM EST', prize: 'Daily Top Prizes' },
+    { day: 'Monday', games: ['Powerball (US$)', 'Lotto America', 'Cash4Life / Weekday Windfall (AU)', 'Set For Life (UK)'], time: 'Nightly Official', prize: '$20M - $1B+ / A$1M' },
+    { day: 'Tuesday', games: ['Mega Millions (US$)', 'Lotto Max (CA$)', 'EuroMillions (EU)', 'Oz Lotto (AU)', 'SA PowerBall'], time: 'Nightly Official', prize: '€17M - $1B+' },
+    { day: 'Wednesday', games: ['Powerball (US$)', 'Canada Lotto 6/49', 'UK Lotto', 'NZ Lotto & Powerball', 'SA Lotto'], time: 'Nightly Official', prize: '$20M - $1B+' },
+    { day: 'Thursday', games: ['Daily Grand (CA$)', 'Australia Powerball', 'Set For Life (UK)', 'Thunderball'], time: 'Nightly Official', prize: 'A$4M - A$100M+' },
+    { day: 'Friday', games: ['Mega Millions (US$)', 'Lotto Max (CA$)', 'EuroMillions (EU)', 'EuroJackpot', 'SA PowerBall'], time: 'Nightly Official', prize: '€17M - $1B+' },
+    { day: 'Saturday', games: ['Powerball (US$)', 'Canada Lotto 6/49', 'TattsLotto / Saturday Lotto (AU)', 'UK Lotto', 'NZ Powerball', 'Nigeria Mega'], time: 'Nightly Official', prize: '$20M - $1B+' },
+    { day: 'Sunday', games: ['Cash4Life', 'SA Daily Lotto', 'Daily US Pick 3/4, OLG, WCLC & Keno'], time: 'Daily Draws', prize: 'Daily Top Prizes' },
   ];
 
   const popularCharts = [
-    { name: 'Powerball Chart 2026', href: '/results/ca/powerball', flag: '🇺🇸', sub: 'USA Multi-State' },
-    { name: 'Mega Millions Chart', href: '/results/ca/mega-millions', flag: '🇺🇸', sub: 'USA Multi-State' },
-    { name: 'Canada Lotto Max Chart', href: '/results/on/lotto-max', flag: '🇨🇦', sub: 'National Canada' },
-    { name: 'AU Powerball Chart', href: '/results/au-nsw/powerball-australia', flag: '🇦🇺', sub: 'Australia' },
-    { name: 'UK Lotto Chart', href: '/results/uk/uk-lotto', flag: '🇬🇧', sub: 'United Kingdom' },
-    { name: 'EuroMillions Chart', href: '/results/eu/euromillions', flag: '🇪🇺', sub: 'Pan-Europe' },
-    { name: 'NZ Powerball Chart', href: '/results/nz/nz-powerball', flag: '🇳🇿', sub: 'New Zealand' },
-    { name: 'SA PowerBall Chart', href: '/results/za/sa-powerball', flag: '🇿🇦', sub: 'South Africa' },
-    { name: 'Nigeria Mega Jackpot', href: '/results/ng/ng-mega-jackpot', flag: '🇳🇬', sub: 'Nigeria' },
+    { name: 'Powerball Chart 2026', href: '/results/ca/powerball/chart', flag: '🇺🇸', sub: 'USA Multi-State' },
+    { name: 'Mega Millions Chart', href: '/results/ca/mega-millions/chart', flag: '🇺🇸', sub: 'USA Multi-State' },
+    { name: 'Canada Lotto Max Chart', href: '/results/on/lotto-max/chart', flag: '🇨🇦', sub: 'National Canada' },
+    { name: 'AU Powerball Chart', href: '/results/au-nsw/powerball-australia/chart', flag: '🇦🇺', sub: 'Australia' },
+    { name: 'UK Lotto Chart', href: '/results/uk/uk-lotto/chart', flag: '🇬🇧', sub: 'United Kingdom' },
+    { name: 'EuroMillions Chart', href: '/results/eu/euromillions/chart', flag: '🇪🇺', sub: 'Pan-Europe' },
+    { name: 'NZ Powerball Chart', href: '/results/nz/nz-powerball/chart', flag: '🇳🇿', sub: 'New Zealand' },
+    { name: 'SA PowerBall Chart', href: '/results/za/sa-powerball/chart', flag: '🇿🇦', sub: 'South Africa' },
+    { name: 'Nigeria Mega Jackpot', href: '/results/ng/ng-mega-jackpot/chart', flag: '🇳🇬', sub: 'Nigeria' },
   ];
 
   const topStates = [
@@ -45,13 +45,13 @@ export default function HomeSeoContent() {
         <div className="text-center max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-800 text-xs font-black uppercase tracking-widest mb-3 border border-amber-400/30">
             <Sparkles size={14} className="text-amber-600" />
-            <span>Official North American Lottery Hub</span>
+            <span>Verified Global Lottery Hub</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0f172a] tracking-tight">
-            Official USA &amp; Canada Lottery Results &amp; Live Chart Updates
+            Official USA, Canada &amp; Global Lottery Results &amp; 2026 Charts
           </h2>
           <p className="text-slate-600 text-base sm:text-lg mt-4 leading-relaxed font-medium">
-            Welcome to the most trusted portal for checking verified <strong>USA lottery results</strong> and <strong>Canada lottery results</strong>. We provide instant real-time updates for live today drawings, comprehensive 365-day archives, and official <strong>2026 lottery charts</strong>.
+            Welcome to AllUSALottery.com for verified <strong>USA lottery results</strong>, <strong>Canada lottery results</strong>, UK, Europe, Australia, New Zealand, South Africa &amp; Nigeria winning numbers with instant live updates, past draw archives, and <strong>2026 overdue number charts</strong>.
           </p>
         </div>
 
@@ -148,10 +148,10 @@ export default function HomeSeoContent() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
               <h3 className="text-2xl sm:text-3xl font-black text-[#0f172a] tracking-tight">
-                Official North American Lottery Weekly Schedule
+                Official Global &amp; North American Weekly Draw Schedule
               </h3>
               <p className="text-slate-500 text-xs sm:text-sm mt-1">
-                Multi-state and national lottery drawings occur seven days a week across the US and Canada.
+                Official national and state lottery drawings take place seven days a week across USA, Canada, Australia, UK, Europe, New Zealand, South Africa &amp; Nigeria.
               </p>
             </div>
             <span className="text-[11px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full self-start sm:self-auto">
@@ -310,6 +310,12 @@ export default function HomeSeoContent() {
                 className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider shadow-sm transition-all"
               >
                 🔴 All Live Feeds →
+              </Link>
+              <Link
+                href="/guides/how-to-claim-lottery-anonymously"
+                className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-black uppercase tracking-wider shadow-sm transition-all"
+              >
+                Winner Tax &amp; Anonymity Guide →
               </Link>
             </div>
           </div>

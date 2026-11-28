@@ -110,8 +110,8 @@ const STATE_ABBREVIATIONS: { [key: string]: string } = {
 export const revalidate = 60;
 
 export const metadata = {
-    title: 'Live Lottery Results Today & Tonight\'s Winning Numbers 2026 | Global Live',
-    description: 'Track official live lottery results today and tonight\'s winning numbers from USA 50 States, Canada, Australia, UK, Europe, New Zealand, South Africa & Nigeria live.',
+    title: 'Live Lottery Results Today & Tonight Winning Numbers 2026',
+    description: 'Track official live lottery results today and tonight\'s winning numbers from USA, Canada, Australia, UK, Europe, New Zealand, South Africa & Nigeria live.',
     alternates: {
         canonical: 'https://allusalottery.com/live-results',
     },
@@ -120,23 +120,31 @@ export const metadata = {
         'live lottery results today',
         'tonight\'s winning numbers',
         'latest winning numbers 2026',
+        'past winning numbers',
+        'numbers for the last 6 months',
+        'Powerball Mega Millions live results',
+        'Lotto Max Lotto 649 OLG WCLC Loto-Quebec',
+        'The Lott Oz Lotto Australia Powerball',
+        'EuroMillions UK Lotto Thunderball EuroJackpot',
+        'MyLotto NZ Powerball results',
+        'Ithuba SA PowerBall Daily Lotto Nigeria',
         'real time lottery results',
         'today lottery results',
         'lottery live feed'
     ],
     openGraph: {
-        title: 'Live Lottery Results Today & Tonight\'s Winning Numbers 2026',
-        description: 'Track incoming lottery draws live from 50 states as they happen.',
+        title: 'Live Lottery Results Today & Tonight Winning Numbers 2026',
+        description: 'Track incoming lottery draws live across USA, Canada, UK, Europe, Australia, NZ & Africa as they happen.',
         url: 'https://allusalottery.com/live-results',
-        images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+        images: [{ url: '/live-results/opengraph-image', width: 1200, height: 630, alt: 'Live Lottery Results Today 2026' }],
         type: 'website',
         siteName: 'All USA Lottery',
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Live Lottery Results Today & Tonight\'s Winning Numbers 2026',
-        description: 'Track real-time lottery draws from 50 states live.',
-        images: ['/og-image.png'],
+        title: 'Live Lottery Results Today & Tonight Winning Numbers 2026',
+        description: 'Track real-time lottery draws from USA, Canada & global lotteries live.',
+        images: ['/live-results/opengraph-image'],
     }
 };
 

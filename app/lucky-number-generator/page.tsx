@@ -11,38 +11,52 @@ import type { Metadata } from 'next';
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: 'Lucky Number Generator 2026 | Powerball, Mega Millions & 30+ World Lotteries',
-  description: 'Free Lucky Number Generator 2026. Generate official lucky numbers for USA Powerball, Mega Millions, Lotto America, Cash4Life, Lotto Max, Pick 3, Pick 4, EuroMillions, and 30+ world lotteries.',
+  title: 'Lucky Number Generator 2026 | Lottery Number Generator & Quick Pick',
+  description: 'Free Lucky Number Generator & Lottery Number Picker 2026. Pick your lucky lottery numbers for Powerball, Mega Millions, Lotto Max, 6/49, EuroMillions, UK 49s, Pick 3/4, Numerology, Horoscope & Scrambler.',
   keywords: [
-    'lucky number generator 2026', 'lottery number generator', 'powerball lucky numbers',
-    'mega millions lucky numbers', 'pick 3 generator', 'pick 4 generator', 'lotto max generator',
-    'euromillions generator', 'random lottery number picker', 'best lottery generator'
+    'lucky number generator',
+    'lottery number generator',
+    'lottery generator',
+    'lotto number generator',
+    'lottery number picker',
+    'pick my lottery numbers',
+    'lucky lottery numbers',
+    'lucky number generator 2026',
+    'truly random lucky number picker',
+    'numerology lucky numbers',
+    'horoscopic lucky numbers',
+    'lottery number scrambler',
+    'number combination generator',
+    'powerball lucky numbers', 'mega millions lucky numbers', 'pick 3 generator', 'pick 4 generator',
+    'lotto max generator', 'lotto 649 OLG WCLC lucky numbers', '6 lucky numbers from 1 to 49',
+    '5 lucky numbers from 1 to 90', 'uk 49s lucky numbers', 'euromillions generator',
+    'oz powerball tattslotto generator', 'sa powerball daily lotto nigeria lucky numbers',
   ],
   alternates: {
     canonical: 'https://allusalottery.com/lucky-number-generator',
   },
   openGraph: {
-    title: 'Lucky Number Generator 2026 | Powerball, Mega Millions & 30+ World Lotteries',
-    description: 'Free Lucky Number Generator 2026. Generate daily lucky numbers for Powerball, Mega Millions, EuroMillions, and 30+ world lotteries.',
+    title: 'Lucky Number Generator 2026 | Lottery Number Generator & Quick Pick',
+    description: 'Free Lucky Number Generator, Combinator, Scrambler, Numerology & Horoscope picker for Powerball, Mega Millions, Lotto 6/49, EuroMillions & 45+ world lotteries.',
     url: 'https://allusalottery.com/lucky-number-generator',
-    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    images: [{ url: '/opengraph-image', width: 1200, height: 630, alt: 'Lucky Number Generator 2026' }],
     type: 'website',
     siteName: 'All USA Lottery',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lucky Number Generator 2026 | Powerball, Mega Millions & World Lotteries',
-    description: 'Free Lucky Number Generator 2026. Generate daily winning numbers for 30+ world lotteries.',
-    images: ['/og-image.png'],
+    title: 'Lucky Number Generator 2026 | Lottery Number Picker & Quick Pick',
+    description: 'Free Lucky Number Generator for Powerball, Mega Millions, Lotto Max, EuroMillions, UK 49s & 45+ world lotteries.',
+    images: ['/opengraph-image'],
   }
 };
 
 const webAppSchema = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  "name": "Lucky Number Generator & Prediction Tool",
+  "name": "Lucky Number Generator & Lottery Number Picker",
   "url": "https://allusalottery.com/lucky-number-generator",
-  "description": "Interactive lucky number picker for USA Powerball, Mega Millions, Canada Lotto Max, and European lotteries.",
+  "description": "Free Lottery Number Generator & Quick Pick tool with Truly Lucky Touch, Numerology, Horoscopic, Scrambler, and Combinator modes for 45+ world lotteries.",
   "applicationCategory": "UtilitiesApplication",
   "operatingSystem": "All",
   "offers": {
@@ -73,11 +87,13 @@ const breadcrumbSchema = {
 
 export default function LuckyNumberGeneratorMainPage() {
   const regions = [
-    { title: 'USA Lotteries (Powerball & Mega Millions)', filter: 'USA' },
-    { title: 'Canada & Australia Lotteries', filter: 'Australia' },
-    { title: 'Europe & UK Lotteries', filter: 'Europe' },
-    { title: 'New Zealand & Africa (SA & Nigeria) Lotteries', filter: 'NZ_ZA' },
-    { title: 'Digit Box, Straight & Custom Tools', filter: 'Global' },
+    { title: 'USA Lotteries (Powerball, Mega Millions & 2by2)', filter: 'USA' },
+    { title: 'Canada Lotteries (Lotto Max, 6/49 & Daily Grand)', filter: 'Canada' },
+    { title: 'UK & Europe Lotteries (EuroMillions, UK 49s & Irish Lotto)', filter: 'Europe' },
+    { title: 'Australia Lotteries (Oz Powerball, Oz Lotto & Tatts)', filter: 'Australia' },
+    { title: 'New Zealand & Africa (NZ Powerball, SA & Nigeria)', filter: 'NZ_ZA' },
+    { title: 'Lucky Modes & Popular Number Formats (6/49, 5/90)', filter: 'Global' },
+    { title: 'Digit Box, Straight & Kerala Tools', filter: 'Digit' },
   ];
 
   return (
@@ -105,10 +121,10 @@ export default function LuckyNumberGeneratorMainPage() {
             Official 2026 Statistical Prediction Algorithm
           </div>
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white mb-4 tracking-tight leading-tight max-w-4xl">
-            Lucky Number Generator 2026 - <span className="text-[#f59e0b]">Powerball & Mega Millions</span>
+            Lucky Number Generator &amp; <span className="text-[#f59e0b]">Lottery Number Picker</span>
           </h1>
           <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto">
-            Generate mathematically unbiased lottery numbers for Powerball, Mega Millions, and 30+ US, Canadian, and European drawings.
+            Pick your lucky lottery numbers with Quick Pick, Truly Lucky Touch, Numerology, Horoscopic Zodiac, Scrambler &amp; Combinator across USA, Canada, UK, Europe, Australia, NZ &amp; Africa.
           </p>
         </div>
       </section>
@@ -146,11 +162,12 @@ export default function LuckyNumberGeneratorMainPage() {
             </div>
 
             {regions.map((reg, idx) => {
-              const catList = CATEGORIES.filter(c =>
-                c.region === reg.filter ||
-                (reg.filter === 'Australia' && (c.country === 'Canada' || c.region === 'Australia')) ||
-                (reg.filter === 'NZ_ZA' && (c.region === 'New Zealand' || c.region === 'Africa'))
-              );
+              const catList = CATEGORIES.filter(c => {
+                if (reg.filter === 'Digit') return c.region === 'Kerala' || c.toolGroup === 'digit';
+                if (reg.filter === 'Global') return c.region === 'Global' && c.toolGroup !== 'digit';
+                if (reg.filter === 'NZ_ZA') return c.region === 'New Zealand' || c.region === 'Africa';
+                return c.region === reg.filter && c.toolGroup !== 'digit';
+              });
               if (catList.length === 0) return null;
 
               return (

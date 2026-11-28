@@ -46,7 +46,7 @@ export type DbHealthStatus =
 export interface AuditUrlRow {
     id: string;
     url: string;
-    pageType: 'Core' | 'Admin/Noindex' | 'State Hub' | 'Game Hub' | 'Past History' | 'Visual Chart' | 'Generator';
+    pageType: 'Core' | 'Admin/Noindex' | 'State Hub' | 'Game Hub' | 'Past History' | 'Visual Chart' | 'Lucky Numbers' | 'Generator';
     country: string;
     stateSlug?: string;
     stateName?: string;
@@ -242,7 +242,8 @@ export async function GET(req: NextRequest) {
             rows.push(
                 { id: `g-${g._id}`, url: `/results/${g.stateSlug}/${g.slug}`, pageType: 'Game Hub', ...basePayload },
                 { id: `h-${g._id}`, url: `/results/${g.stateSlug}/${g.slug}/history`, pageType: 'Past History', ...basePayload },
-                { id: `c-${g._id}`, url: `/results/${g.stateSlug}/${g.slug}/chart`, pageType: 'Visual Chart', ...basePayload }
+                { id: `c-${g._id}`, url: `/results/${g.stateSlug}/${g.slug}/chart`, pageType: 'Visual Chart', ...basePayload },
+                { id: `l-${g._id}`, url: `/results/${g.stateSlug}/${g.slug}/lucky-numbers`, pageType: 'Lucky Numbers', ...basePayload }
             );
         }
 

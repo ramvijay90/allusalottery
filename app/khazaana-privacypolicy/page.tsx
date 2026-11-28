@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import React from 'react';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | Khazaana Lottery Results',
+  description: 'Official Privacy Policy for the Khazaana Lottery Results mobile application by VS Tech.',
+  alternates: { canonical: 'https://allusalottery.com/khazaana-privacypolicy' },
+};
 
 export default function KhazaanaPrivacyPolicy() {
   return (

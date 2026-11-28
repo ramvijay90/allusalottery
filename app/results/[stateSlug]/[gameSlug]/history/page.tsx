@@ -2,9 +2,11 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, Calendar, TrendingUp } from 'lucide-react';
 import { getStateLotteryDetails } from '@/lib/stateLotteryInfo';
-import { getGameData, resolveAliases, cleanJackpot } from '@/lib/getGameData';
+import { getGameData, resolveAliases } from '@/lib/getGameData';
+import { buildGameKeywords, formatDrawSummaryLine, getCountryKeywordBundle } from '@/lib/seoKeywords';
 import GameChartAnalytics from '@/components/GameChartAnalytics';
 import GameSubNav from '@/components/GameSubNav';
+import RecentDrawsSummary from '@/components/RecentDrawsSummary';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
 import AfterContentAd from '@/components/ads/AfterContentAd';
 import SidebarAd from '@/components/ads/SidebarAd';
@@ -21,9 +23,11 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
 
     const currentYear = new Date().getFullYear();
     const stateDetails = getStateLotteryDetails(resolvedState);
+    const bundle = getCountryKeywordBundle(data.state.country, resolvedState, data.state.name);
+    const recent3 = (data.history || []).slice(0, 3).map((h: any) => formatDrawSummaryLine(h)).filter(Boolean);
 
-    const title = `${data.state.name} ${data.game.name} Past Results & History Archive ${currentYear} | All Draw Dates`;
-    const description = `Complete official ${data.state.name} ${data.game.name} past results archive for ${currentYear} and previous draws. Search winning numbers by year, month, and date with jackpot payout history (${stateDetails.name}).`;
+    const title = `${data.state.name} ${data.game.name} Past Winning Numbers (${currentYear})`;
+    const description = `${data.game.name} Past Winning Numbers & Last 6 Months (${bundle.operatorShort}): ${recent3.length > 0 ? recent3.join('; ') + '. ' : ''}Complete ${currentYear} draw history, dates & jackpots.`;
     const canonicalUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}/history`;
     const ogImageUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}/opengraph-image`;
 
@@ -38,16 +42,14 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
         robots: hasNumbers
             ? { index: true, follow: true }
             : { index: false, follow: true },
-        keywords: [
-            `${data.game.name} past results`,
-            `${data.game.name} history`,
-            `${data.game.name} draw archive`,
-            `${data.game.name} past winning numbers ${currentYear}`,
-            `${data.state.name} ${data.game.name} history`,
-            `${data.game.name} old results`,
-            `${data.game.name} numbers by date`,
-            `all ${data.game.name} drawings`
-        ],
+        keywords: buildGameKeywords({
+            stateName: data.state.name,
+            stateSlug: resolvedState,
+            country: data.state.country,
+            gameName: data.game.name,
+            gameSlug: resolvedGame,
+            year: currentYear,
+        }),
         openGraph: {
             title,
             description,
@@ -91,11 +93,65 @@ export default async function GameHistoryPage({ params }: { params: Promise<{ st
         ]
     };
 
+    const dateModifiedIso = game.lastDrawDate ? new Date(game.lastDrawDate).toISOString() : new Date().toISOString();
+    const datasetSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        'name': `${state.name} ${game.name} Past Results ${currentYear} Archive`,
+        'url': `https://allusalottery.com/results/${state.slug}/${game.slug}/history`,
+        'dateModified': dateModifiedIso,
+        'primaryImageOfPage': {
+            '@type': 'ImageObject',
+            'url': `https://allusalottery.com/results/${state.slug}/${game.slug}/opengraph-image`,
+            'width': 1200,
+            'height': 630
+        },
+        'mainEntity': {
+            '@type': 'Dataset',
+            'name': `${state.name} ${game.name} Historical Draw Archive`,
+            'description': `Complete verified past draw dates and winning numbers for ${state.name} ${game.name} (${currentYear}).`,
+            'temporalCoverage': `${currentYear}-01-01/..`,
+            'dateModified': dateModifiedIso,
+            'isAccessibleForFree': true
+        }
+    };
+
+    const faqSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': [
+            {
+                '@type': 'Question',
+                'name': `How far back does the ${state.name} ${game.name} past results archive go?`,
+                'acceptedAnswer': {
+                    '@type': 'Answer',
+                    'text': `You can browse verified ${state.name} ${game.name} winning numbers across ${currentYear} by selecting any month or searching specific numbers in the archive table above.`
+                }
+            },
+            {
+                '@type': 'Question',
+                'name': `Where can I check overdue and hot numbers for ${state.name} ${game.name}?`,
+                'acceptedAnswer': {
+                    '@type': 'Answer',
+                    'text': `Switch to the 2026 Visual Chart tab (/results/${state.slug}/${game.slug}/chart) to inspect overdue pending digits, monthly frequency grids, and weekly breakdowns.`
+                }
+            }
+        ]
+    };
+
     return (
         <div className="flex flex-col xl:flex-row justify-between items-center xl:items-start gap-6 xl:gap-8 px-4 sm:px-6 xl:px-8 py-12 w-full max-w-[1760px] mx-auto">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
             />
 
             {/* Left Sidebar */}
@@ -122,6 +178,16 @@ export default async function GameHistoryPage({ params }: { params: Promise<{ st
                         Explore full verified past winning numbers for {state.name} {game.name} from {currentYear} and prior years. Filter by year, month, or search specific numbers.
                     </p>
                 </div>
+
+                {/* SSR Text Summary of Recent Draws (Optimized for Google SERP Snippets like Texas Lottery) */}
+                <RecentDrawsSummary
+                    gameName={game.name}
+                    stateSlug={state.slug}
+                    gameSlug={game.slug}
+                    history={history}
+                    maxItems={6}
+                    showArchiveLink={false}
+                />
 
                 {/* Before Content Ad */}
                 <BeforeContentAd />

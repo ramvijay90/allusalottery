@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { Calendar, BarChart3, Clock, Sparkles } from 'lucide-react';
+import { BarChart3, Clock, Sparkles, Wand2 } from 'lucide-react';
 
 interface GameSubNavProps {
   stateSlug: string;
   gameSlug: string;
-  currentSection: 'main' | 'history' | 'chart';
+  currentSection: 'main' | 'history' | 'chart' | 'lucky';
 }
 
 export default function GameSubNav({ stateSlug, gameSlug, currentSection }: GameSubNavProps) {
@@ -28,6 +28,12 @@ export default function GameSubNav({ stateSlug, gameSlug, currentSection }: Game
       label: '2026 Visual Chart',
       href: `${base}/chart`,
       icon: <BarChart3 size={16} />
+    },
+    {
+      id: 'lucky',
+      label: 'Lucky Numbers',
+      href: `${base}/lucky-numbers`,
+      icon: <Wand2 size={16} />
     }
   ];
 
@@ -40,7 +46,7 @@ export default function GameSubNav({ stateSlug, gameSlug, currentSection }: Game
             <Link
               key={tab.id}
               href={tab.href}
-              className={`px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+              className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
                 isActive
                   ? 'bg-[#0f172a] text-[#f59e0b] shadow-md shadow-slate-900/20 scale-[1.02]'
                   : 'text-slate-600 hover:text-[#0f172a] hover:bg-white/60'

@@ -6,9 +6,20 @@ import AfterContentAd from '@/components/ads/AfterContentAd';
 import SidebarAd from '@/components/ads/SidebarAd';
 
 export const metadata = {
-    title: 'How to Claim USA Lottery Winnings Anonymously - LottoGlobal Guide',
-    description: 'Protect your privacy and cash. Learn which states allow anonymous lottery claims, and how to use blind trusts or LLCs to protect your identity.',
-    keywords: ['claim lottery anonymously', 'blind trust lottery', 'lottery lawyer', 'taxes on lottery winnings', 'state anonymous lottery laws'],
+    title: 'How to Claim Lottery Winnings Anonymously (2026 Guide)',
+    description: 'Which US states allow anonymous lottery claims? Learn how blind trusts, LLCs, taxes, and claim deadlines protect jackpot winners.',
+    alternates: {
+        canonical: 'https://allusalottery.com/guides/how-to-claim-lottery-anonymously',
+    },
+    keywords: ['claim lottery anonymously', 'blind trust lottery', 'anonymous lottery states', 'lottery lawyer', 'taxes on lottery winnings', 'state anonymous lottery laws'],
+    openGraph: {
+        title: 'How to Claim Lottery Winnings Anonymously (2026 Guide)',
+        description: 'Learn which states allow anonymous lottery prize claims and how blind trusts or LLCs protect jackpot winners.',
+        url: 'https://allusalottery.com/guides/how-to-claim-lottery-anonymously',
+        images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
+        type: 'article',
+        siteName: 'All USA Lottery',
+    },
 };
 
 export default function AnonymousClaimGuide() {

@@ -1,4 +1,19 @@
+import type { Metadata } from 'next';
 import { Mail, MapPin, Phone, Zap } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'Contact All USA Lottery | Support & Result Inquiries',
+  description: 'Contact the AllUSALottery.com team for draw feedback, data corrections, advertising, or technical inquiries.',
+  alternates: { canonical: 'https://allusalottery.com/contact' },
+  openGraph: {
+    title: 'Contact All USA Lottery',
+    description: 'Reach out to AllUSALottery.com for lottery result feedback and inquiries.',
+    url: 'https://allusalottery.com/contact',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
+    type: 'website',
+    siteName: 'All USA Lottery',
+  },
+};
 
 export default function ContactPage() {
   return (

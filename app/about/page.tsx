@@ -1,5 +1,20 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Mail, Shield, BookOpen, Users } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: 'About All USA Lottery | Verified Results & 2026 Charts',
+  description: 'Learn how AllUSALottery.com verifies real-time winning numbers, 2026 visual charts, and historical draw archives across USA, Canada, Australia, UK, Europe, NZ & Africa.',
+  alternates: { canonical: 'https://allusalottery.com/about' },
+  openGraph: {
+    title: 'About All USA Lottery | Verified Results & 2026 Charts',
+    description: 'Verified real-time lottery results, 2026 charts, and draw archives across 7 global regions.',
+    url: 'https://allusalottery.com/about',
+    images: [{ url: '/opengraph-image', width: 1200, height: 630 }],
+    type: 'website',
+    siteName: 'All USA Lottery',
+  },
+};
 
 export default function AboutPage() {
   return (

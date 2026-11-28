@@ -76,12 +76,12 @@ function cleanJackpot(jackpotStr?: string): string {
   return text.length > 18 ? text.slice(0, 16) + '...' : text;
 }
 
-// Clean balls array to keep only valid numeric digits (filters out diff tags like +1, -1, +3)
+// Clean balls array to keep valid digits or alphanumeric card/sign/raffle tokens (filters out diff tags like +1, -1, +3)
 function cleanNumbersList(numbers?: string[]): string[] {
   if (!Array.isArray(numbers)) return [];
   return numbers
     .map((n) => String(n).trim())
-    .filter((n) => /^\d+$/.test(n));
+    .filter((n) => n.length > 0 && n.length <= 20 && !/^[+-]\d+$/.test(n) && !/^official$/i.test(n));
 }
 
 export default function GameChartAnalytics({
@@ -96,7 +96,7 @@ export default function GameChartAnalytics({
     (initialHistory || []).map((item) => ({
       ...item,
       numbers: cleanNumbersList(item.numbers),
-      powerBall: item.powerBall && /^\d+$/.test(String(item.powerBall).trim()) ? String(item.powerBall).trim() : undefined,
+      powerBall: item.powerBall && String(item.powerBall).trim().length > 0 ? String(item.powerBall).trim() : undefined,
     }))
   );
 
@@ -107,7 +107,7 @@ export default function GameChartAnalytics({
         initialHistory.map((item) => ({
           ...item,
           numbers: cleanNumbersList(item.numbers),
-          powerBall: item.powerBall && /^\d+$/.test(String(item.powerBall).trim()) ? String(item.powerBall).trim() : undefined,
+          powerBall: item.powerBall && String(item.powerBall).trim().length > 0 ? String(item.powerBall).trim() : undefined,
         }))
       );
     }

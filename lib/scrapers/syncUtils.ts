@@ -151,6 +151,16 @@ export async function upsertGameAndResult(gameDoc: any, payload: UpsertDrawPaylo
             gameDoc.lastDrawDate = payload.drawDate;
             await gameDoc.save();
             changed = true;
+            // Refresh game, history, and chart pages immediately inside Next.js runtime
+            if (gameDoc.stateSlug && gameDoc.slug) {
+                try {
+                    const { revalidatePath } = await import('next/cache');
+                    revalidatePath(`/results/${gameDoc.stateSlug}/${gameDoc.slug}`);
+                    revalidatePath(`/results/${gameDoc.stateSlug}/${gameDoc.slug}/history`);
+                    revalidatePath(`/results/${gameDoc.stateSlug}/${gameDoc.slug}/chart`);
+                    revalidatePath(`/results/${gameDoc.stateSlug}/${gameDoc.slug}/lucky-numbers`);
+                } catch (_) {}
+            }
         }
     }
 

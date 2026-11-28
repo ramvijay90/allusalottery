@@ -103,6 +103,7 @@ export async function GET(request: NextRequest) {
             try {
                 revalidatePath('/');
                 revalidatePath('/live-results');
+                revalidatePath('/sitemap.xml');
             } catch (_) {}
         }
 

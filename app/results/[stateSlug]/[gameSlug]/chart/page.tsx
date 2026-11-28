@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ChevronLeft, BarChart3, Sparkles } from 'lucide-react';
 import { getStateLotteryDetails } from '@/lib/stateLotteryInfo';
 import { getGameData, resolveAliases, cleanJackpot } from '@/lib/getGameData';
+import { buildGameKeywords, getCountryKeywordBundle } from '@/lib/seoKeywords';
 import GameChartAnalytics from '@/components/GameChartAnalytics';
 import GameSubNav from '@/components/GameSubNav';
 import ChartImagePreview from '@/components/ChartImagePreview';
@@ -22,9 +23,10 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
 
     const currentYear = new Date().getFullYear();
     const stateDetails = getStateLotteryDetails(resolvedState);
+    const bundle = getCountryKeywordBundle(data.state.country, resolvedState, data.state.name);
 
-    const title = `${data.state.name} ${data.game.name} 2026 Chart | Monthly, Weekly & Overdue Analysis`;
-    const description = `Interactive ${currentYear} lottery charts for ${data.state.name} ${data.game.name}. Analyze monthly winning trends, weekly day-of-week breakdowns, hot and cold numbers, and overdue pending digits (${stateDetails.name}).`;
+    const title = `${data.state.name} ${data.game.name} Chart ${currentYear} | Hot, Cold & Overdue`;
+    const description = `Interactive ${currentYear} ${data.state.name} ${data.game.name} chart (${bundle.operatorShort}): monthly results gallery, weekly trends, hot/cold frequency & overdue pending numbers.`;
     const canonicalUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}/chart`;
     const ogImageUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}/opengraph-image`;
 
@@ -39,16 +41,14 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
         robots: hasNumbers
             ? { index: true, follow: true }
             : { index: false, follow: true },
-        keywords: [
-            `${data.game.name} chart 2026`,
-            `${data.game.name} monthly chart`,
-            `${data.game.name} weekly chart`,
-            `${data.game.name} overdue numbers`,
-            `${data.game.name} pending numbers`,
-            `${data.game.name} hot and cold numbers`,
-            `${data.state.name} ${data.game.name} statistics`,
-            `${data.game.name} frequency chart`
-        ],
+        keywords: buildGameKeywords({
+            stateName: data.state.name,
+            stateSlug: resolvedState,
+            country: data.state.country,
+            gameName: data.game.name,
+            gameSlug: resolvedGame,
+            year: currentYear,
+        }),
         openGraph: {
             title,
             description,
@@ -91,11 +91,65 @@ export default async function GameChartPage({ params }: { params: Promise<{ stat
         ]
     };
 
+    const dateModifiedIso = game.lastDrawDate ? new Date(game.lastDrawDate).toISOString() : new Date().toISOString();
+    const datasetSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        'name': `${state.name} ${game.name} Chart ${currentYear} | Monthly & Overdue`,
+        'url': `https://allusalottery.com/results/${state.slug}/${game.slug}/chart`,
+        'dateModified': dateModifiedIso,
+        'primaryImageOfPage': {
+            '@type': 'ImageObject',
+            'url': `https://allusalottery.com/results/${state.slug}/${game.slug}/opengraph-image`,
+            'width': 1200,
+            'height': 630
+        },
+        'mainEntity': {
+            '@type': 'Dataset',
+            'name': `${state.name} ${game.name} ${currentYear} Frequency & Overdue Chart`,
+            'description': `Monthly result gallery, weekly weekday trends, hot/cold frequency counts, and overdue pending numbers for ${state.name} ${game.name} (${currentYear}).`,
+            'temporalCoverage': `${currentYear}-01-01/..`,
+            'dateModified': dateModifiedIso,
+            'isAccessibleForFree': true
+        }
+    };
+
+    const faqSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': [
+            {
+                '@type': 'Question',
+                'name': `How to read the ${state.name} ${game.name} ${currentYear} monthly & overdue chart?`,
+                'acceptedAnswer': {
+                    '@type': 'Answer',
+                    'text': `Use the Monthly Calendar tab to inspect every draw in ${currentYear}, Weekly Chart to compare day-of-week repeats, and Pending Numbers to find the longest-overdue digits.`
+                }
+            },
+            {
+                '@type': 'Question',
+                'name': `Can I download the ${state.name} ${game.name} ${currentYear} chart image?`,
+                'acceptedAnswer': {
+                    '@type': 'Answer',
+                    'text': `Yes. Click Download on the verified 1200x630 chart card above to save a PNG snapshot or share it directly to WhatsApp.`
+                }
+            }
+        ]
+    };
+
     return (
         <div className="flex flex-col xl:flex-row justify-between items-center xl:items-start gap-6 xl:gap-8 px-4 sm:px-6 xl:px-8 py-12 w-full max-w-[1760px] mx-auto">
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(datasetSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
             />
 
             {/* Left Sidebar */}

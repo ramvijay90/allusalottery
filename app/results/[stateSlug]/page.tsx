@@ -12,6 +12,7 @@ import InFeedAd from '@/components/ads/InFeedAd';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
 import ChartImagePreview from '@/components/ChartImagePreview';
 import LotteryChartNavigation from '@/components/LotteryChartNavigation';
+import { getCountryKeywordBundle, formatDrawSummaryLine } from '@/lib/seoKeywords';
 
 const STATE_ABBREVIATIONS: { [key: string]: string } = {
   arizona: 'AZ',
@@ -169,12 +170,17 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
 
     const currentYear = new Date().getFullYear();
     const stateName = data.state.name;
-    const country = data.state.country || 'USA';
-    const regionLabel = country === 'US' ? 'USA' : country;
-    const activeGamesCount = (data.games || []).filter((g: any) => Array.isArray(g.numbers) && g.numbers.length > 0).length;
+    const country = data.state.country || 'US';
+    const bundle = getCountryKeywordBundle(country, resolved, stateName);
+    const activeGames = (data.games || []).filter((g: any) => Array.isArray(g.numbers) && g.numbers.length > 0);
+    const activeGamesCount = activeGames.length;
+    const topSnippets = activeGames
+        .slice(0, 3)
+        .map((g: any) => `${g.name} (${formatDrawSummaryLine({ date: g.lastDrawDate, numbers: g.numbers, powerBall: g.powerBall }) || g.numbers.join('-')})`)
+        .join(' • ');
 
-    const title = `${stateName} Lottery Results Today & Winning Numbers ${currentYear} | ${regionLabel}`;
-    const description = `Official ${stateName} lottery results today, live winning numbers, daily jackpot updates, and complete game schedules for ${currentYear}. Fast, verified drawings.`;
+    const title = `${stateName} Lottery Winning Numbers & Results (${currentYear}) | ${bundle.operatorShort}`;
+    const description = `${stateName} lottery results & past winning numbers (${bundle.operatorName}). ${topSnippets ? `Latest: ${topSnippets}. ` : ''}Check ${currentYear} charts & jackpots.`;
     const canonicalUrl = `https://allusalottery.com/results/${resolved}`;
     const ogImageUrl = `https://allusalottery.com/results/${resolved}/opengraph-image`;
 
@@ -188,13 +194,11 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
             ? { index: true, follow: true }
             : { index: false, follow: true },
         keywords: [
-            `${stateName} lottery`,
-            `${stateName} lottery results`,
-            `${stateName} lottery results today`,
-            `${stateName} winning numbers ${currentYear}`,
-            `${stateName} lotto live`,
-            'daily lottery drawings',
-            'state lottery results'
+            ...bundle.countryTerms,
+            ...activeGames.slice(0, 8).map((g: any) => `${stateName} ${g.name} winning numbers`),
+            ...activeGames.slice(0, 6).map((g: any) => `${g.name} past winning numbers`),
+            `${stateName} lottery ${currentYear} chart`,
+            'past winning numbers archive',
         ],
         openGraph: {
             title,
@@ -282,6 +286,25 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
         ]
     };
 
+    const latestStateDraw = games
+        .map((g: any) => (g.lastDrawDate ? new Date(g.lastDrawDate).getTime() : 0))
+        .reduce((a: number, b: number) => Math.max(a, b), 0);
+
+    const webPageSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        'name': `${state.name} Lottery Results Today (${currentYear})`,
+        'url': `https://allusalottery.com/results/${state.slug}`,
+        'dateModified': latestStateDraw ? new Date(latestStateDraw).toISOString() : new Date().toISOString(),
+        'primaryImageOfPage': {
+            '@type': 'ImageObject',
+            'url': `https://allusalottery.com/results/${state.slug}/opengraph-image`,
+            'width': 1200,
+            'height': 630,
+        },
+        'description': `Live winning numbers, daily draw results, and 2026 archives for ${games.length} ${state.name} lottery games.`,
+    };
+
     return (
         <div className="flex flex-col xl:flex-row justify-between items-center xl:items-start gap-6 xl:gap-8 px-4 sm:px-6 xl:px-8 py-12 w-full max-w-[1760px] mx-auto">
             <script
@@ -291,6 +314,10 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
             />
             {/* Left Sidebar - Desktop Only */}
             <aside className="hidden xl:block w-72 shrink-0 sticky top-24 self-start space-y-6">
@@ -383,14 +410,25 @@ export default async function StatePage({ params }: { params: Promise<{ stateSlu
                                     )}
                                 </div>
 
-                                <div className="flex justify-between items-center border-t border-slate-50 pt-6">
+                                <div className="flex flex-wrap justify-between items-center gap-3 border-t border-slate-50 pt-6">
                                     <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Result Cached</span>
                                     </div>
-                                    <Link href={`/results/${state.slug}/${game.slug}`} className="bg-slate-50 hover:bg-[#0f172a] text-slate-600 hover:text-white px-5 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2">
-                                        Past Results <ChevronRight size={14} />
-                                    </Link>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Link href={`/results/${state.slug}/${game.slug}/lucky-numbers`} className="bg-emerald-50 hover:bg-emerald-600 text-emerald-800 hover:text-white px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all">
+                                            Lucky Numbers
+                                        </Link>
+                                        <Link href={`/results/${state.slug}/${game.slug}/chart`} className="bg-amber-50 hover:bg-amber-500 text-amber-800 hover:text-slate-950 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all">
+                                            2026 Chart
+                                        </Link>
+                                        <Link href={`/results/${state.slug}/${game.slug}/history`} className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all">
+                                            History
+                                        </Link>
+                                        <Link href={`/results/${state.slug}/${game.slug}`} className="bg-slate-50 hover:bg-[#0f172a] text-slate-600 hover:text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-1.5">
+                                            Past Results <ChevronRight size={14} />
+                                        </Link>
+                                    </div>
                                 </div>
                             </div>
 

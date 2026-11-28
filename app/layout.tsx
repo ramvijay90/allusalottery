@@ -26,10 +26,10 @@ export const metadata: Metadata = {
     siteName: 'All USA Lottery',
     images: [
       {
-        url: '/og-image.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
-        alt: 'All USA Lottery Logo',
+        alt: 'All USA Lottery Results & 2026 Charts',
       },
     ],
     locale: 'en_US',
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'All USA Lottery - Live Results & Jackpots',
     description: 'Get the latest winning numbers for Mega Millions, Powerball, and all state lotteries instantly.',
-    images: ['/og-image.png'],
+    images: ['/opengraph-image'],
   },
   icons: {
     icon: [
@@ -172,13 +172,16 @@ export default function RootLayout({
                   <li><Link href="/?country=Europe#states" className="hover:text-white transition-colors">UK &amp; Europe Results</Link></li>
                   <li><Link href="/?country=New Zealand#states" className="hover:text-white transition-colors">New Zealand Results</Link></li>
                   <li><Link href="/?country=Africa#states" className="hover:text-white transition-colors">Africa (SA &amp; Nigeria)</Link></li>
+                  <li><Link href="/live-results" className="hover:text-white transition-colors">Live Results Feed</Link></li>
+                  <li><Link href="/lucky-number-generator" className="hover:text-white transition-colors">Lucky Number Generator</Link></li>
                   <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
                   <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
                 </ul>
               </div>
               <div>
-                <h4 className="text-white font-black text-sm uppercase tracking-[0.2em] mb-8">Legal</h4>
+                <h4 className="text-white font-black text-sm uppercase tracking-[0.2em] mb-8">Legal &amp; Guides</h4>
                 <ul className="space-y-4 text-slate-400 text-sm font-bold">
+                  <li><Link href="/guides/how-to-claim-lottery-anonymously" className="hover:text-white transition-colors">Anonymous Claim Guide</Link></li>
                   <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
                   <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Use</Link></li>
                   <li><Link href="/#jackpots" className="hover:text-white transition-colors">Top Jackpots</Link></li>

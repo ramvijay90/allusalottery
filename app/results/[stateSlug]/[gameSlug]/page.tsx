@@ -5,12 +5,14 @@ import GameChartAnalytics from '@/components/GameChartAnalytics';
 import ChartImagePreview from '@/components/ChartImagePreview';
 import LotteryChartNavigation from '@/components/LotteryChartNavigation';
 import GameSubNav from '@/components/GameSubNav';
+import RecentDrawsSummary from '@/components/RecentDrawsSummary';
 import MultiplexAd from '@/components/ads/MultiplexAd';
 import SidebarAd from '@/components/ads/SidebarAd';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
 import AfterContentAd from '@/components/ads/AfterContentAd';
 import { getStateLotteryDetails } from '@/lib/stateLotteryInfo';
 import { getGameData, resolveAliases, cleanJackpot } from '@/lib/getGameData';
+import { buildGameKeywords, formatDrawSummaryLine, getCountryKeywordBundle } from '@/lib/seoKeywords';
 
 // Cache responses for 5 minutes (ISR) to keep server process count near 0
 export const revalidate = 300;
@@ -83,17 +85,22 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
 
     const currentYear = new Date().getFullYear();
     const stateDetails = getStateLotteryDetails(resolvedState);
-    const isMultiState = ['powerball', 'megamillions', 'lotto-america', 'cash-4-life', 'lucky-for-life', 'lottomax', 'euro-millions', 'euromillions', 'euro-jackpot', 'eurojackpot', 'nz-powerball', 'nz-lotto', 'sa-powerball', 'sa-lotto', 'ng-mega-jackpot'].includes(data.game.slug.toLowerCase());
+    const bundle = getCountryKeywordBundle(data.state.country, resolvedState, data.state.name);
+    const isMultiState = ['powerball', 'megamillions', 'mega-millions', 'lotto-america', 'millionaire-for-life', 'cash-4-life', 'lucky-for-life', 'lotto-max', 'canada-lotto-6-49', 'daily-grand', 'lottomax', 'euro-millions', 'euromillions', 'euro-jackpot', 'eurojackpot', 'nz-powerball', 'nz-lotto', 'nz-keno', 'sa-powerball', 'sa-lotto', 'sa-daily-lotto', 'ng-mega-jackpot'].includes(data.game.slug.toLowerCase());
     const hasNumbers = Array.isArray(data.game.numbers) && data.game.numbers.length > 0;
-    
-    // Unique formula for EVERY state to eliminate Google deduplication
-    const primaryTitle = isMultiState
-        ? `${data.state.name} ${data.game.name} Winning Numbers & Results ${currentYear} | ${stateDetails.code} Lottery`
-        : `${data.state.name} ${data.game.name} Results Today, Past Numbers & Charts ${currentYear}`;
-    
-    const title = `${primaryTitle} | Past Drawings & Payouts`;
+
+    // SERP-optimized KL-style title matching top-ranking searches
+    const title = isMultiState
+        ? `${data.state.name} ${data.game.name} Winning Numbers ${currentYear} & Chart`
+        : `${data.state.name} ${data.game.name} Winning Numbers & ${currentYear} Chart`;
     const cleanJp = cleanJackpot(data.game.jackpot);
-    const description = `Official ${data.state.name} ${data.game.name} winning numbers for ${currentYear}. Complete past draw history, 2026 result charts, ${data.state.name} claim deadlines (${stateDetails.claimPeriod}), tax rates (${stateDetails.stateTaxRate}), and jackpot payouts (${cleanJp || 'official draws'}).`;
+    const recentDraws = (data.history || []).slice(0, 2).map((h: any) => formatDrawSummaryLine(h)).filter(Boolean);
+    const latestNumsSnippet = recentDraws.length > 0
+        ? `${recentDraws.join('; ')}${cleanJp ? ` (${cleanJp})` : ''}. `
+        : hasNumbers
+            ? `${data.game.numbers.slice(0, 7).join('-')}${data.game.powerBall ? ` (${data.game.powerBall})` : ''}. `
+            : '';
+    const description = `${data.state.name} ${data.game.name} winning numbers & past results (${bundle.operatorShort}): ${latestNumsSnippet}${currentYear} charts, overdue numbers, claim (${stateDetails.claimPeriod}) & tax (${stateDetails.stateTaxRate}).`;
     const canonicalUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}`;
     const ogImageUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}/opengraph-image`;
 
@@ -106,25 +113,14 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
         robots: hasNumbers
             ? { index: true, follow: true }
             : { index: false, follow: true },
-        keywords: [
-            `${data.game.name} results`,
-            `${data.game.name} winning numbers`,
-            `${data.game.name} chart ${currentYear}`,
-            `${data.game.name} past results`,
-            `${data.game.name} history`,
-            `${data.game.name} monthly chart`,
-            `${data.game.name} weekly chart`,
-            `${data.game.name} pending numbers`,
-            `${data.game.name} overdue numbers`,
-            `${data.game.name} hot and cold numbers`,
-            `${data.state.name} lottery results`,
-            `${data.state.name} ${data.game.name}`,
-            'past lottery numbers',
-            `lottery history ${currentYear}`,
-            'tonight\'s winning numbers',
-            'latest lottery draw',
-            `check ${data.game.name} ticket`
-        ],
+        keywords: buildGameKeywords({
+            stateName: data.state.name,
+            stateSlug: resolvedState,
+            country: data.state.country,
+            gameName: data.game.name,
+            gameSlug: resolvedGame,
+            year: currentYear,
+        }),
         openGraph: {
             title,
             description,
@@ -270,30 +266,42 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
         ]
     };
 
-    // Schema.org Lottery / Event JSON-LD
+    // Schema.org WebPage + Dataset JSON-LD (avoids stale Event warnings & strengthens Google Dataset/Discover image discovery)
+    const dateModifiedIso = game.lastDrawDate ? new Date(game.lastDrawDate).toISOString() : new Date().toISOString();
     const jsonLd = {
         '@context': 'https://schema.org',
-        '@type': 'Event',
-        'name': `${state.name} ${game.name} Lottery Drawing`,
-        'startDate': game.lastDrawDate,
-        'eventStatus': 'https://schema.org/EventScheduled',
-        'eventAttendanceMode': 'https://schema.org/OfflineEventAttendanceMode',
-        'location': {
-            '@type': 'Place',
-            'name': `${state.name} Lottery Official Drawing`,
-            'address': {
-                '@type': 'PostalAddress',
-                'addressRegion': state.name,
-                'addressCountry': countrySeo.countryCode
-            }
+        '@type': 'WebPage',
+        'name': `${state.name} ${game.name} Result Today & ${currentYear} Chart`,
+        'url': `https://allusalottery.com/results/${state.slug}/${game.slug}`,
+        'dateModified': dateModifiedIso,
+        'primaryImageOfPage': {
+            '@type': 'ImageObject',
+            'url': `https://allusalottery.com/results/${state.slug}/${game.slug}/opengraph-image`,
+            'width': 1200,
+            'height': 630
         },
-        'description': `Official ${state.name} ${game.name} lottery drawing. Winning numbers: ${(game.numbers || []).join(' ')}${game.powerBall ? ' [' + game.powerBall + ']' : ''}.`,
-        'offers': {
-            '@type': 'Offer',
-            'price': countrySeo.ticketPrice,
-            'priceCurrency': countrySeo.currency,
-            'availability': 'https://schema.org/InStock',
-            'url': `https://allusalottery.com/results/${state.slug}/${game.slug}`
+        'mainEntity': {
+            '@type': 'Dataset',
+            'name': `${state.name} ${game.name} ${currentYear} Winning Numbers & Draw Archive`,
+            'description': `Verified ${state.name} ${game.name} winning numbers (${(game.numbers || []).join(', ')}${game.powerBall ? ' +' + game.powerBall : ''}), full ${currentYear} history archive, and frequency chart analytics.`,
+            'url': `https://allusalottery.com/results/${state.slug}/${game.slug}`,
+            'temporalCoverage': `${currentYear}-01-01/..`,
+            'dateModified': dateModifiedIso,
+            'isAccessibleForFree': true,
+            'creator': {
+                '@type': 'Organization',
+                'name': 'All USA Lottery',
+                'url': 'https://allusalottery.com'
+            },
+            'spatialCoverage': {
+                '@type': 'Place',
+                'name': state.name,
+                'address': {
+                    '@type': 'PostalAddress',
+                    'addressRegion': state.name,
+                    'addressCountry': countrySeo.countryCode
+                }
+            }
         }
     };
 
@@ -377,10 +385,10 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                         
                         {/* Number Balls - Perfectly Proportioned Squircles & Circular Powerball */}
                         <div className="flex flex-wrap gap-2.5 sm:gap-3.5 md:gap-4 items-center justify-center mb-8">
-                            {game.numbers.filter((num: string) => /^\d+$/.test(num.trim())).map((num: string, idx: number) => (
+                            {game.numbers.filter((num: string) => num && num.trim().length > 0 && !/^official$/i.test(num.trim())).map((num: string, idx: number) => (
                                 <span
                                     key={idx}
-                                    className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 aspect-square rounded-2xl md:rounded-[22px] bg-white text-[#0f172a] text-xl sm:text-3xl md:text-4xl font-black flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.35)] border border-slate-100 hover:scale-105 transition-transform shrink-0"
+                                    className="min-w-12 h-12 sm:min-w-16 sm:h-16 md:min-w-20 md:h-20 px-3 rounded-2xl md:rounded-[22px] bg-white text-[#0f172a] text-xl sm:text-3xl md:text-4xl font-black flex items-center justify-center shadow-[0_10px_25px_rgba(0,0,0,0.35)] border border-slate-100 hover:scale-105 transition-transform shrink-0"
                                 >
                                     {num}
                                 </span>
@@ -448,6 +456,16 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
 
                 {/* After Content Ad */}
                 <AfterContentAd />
+
+                {/* SSR Text Summary of Recent Draws for SERP Snippets */}
+                <RecentDrawsSummary
+                    gameName={game.name}
+                    stateSlug={state.slug}
+                    gameSlug={game.slug}
+                    history={history}
+                    maxItems={5}
+                    showArchiveLink={true}
+                />
 
                 {/* SEO Text, State Rules, Cross-Links & Frequently Asked Questions */}
                 <div className="mt-12 space-y-8">

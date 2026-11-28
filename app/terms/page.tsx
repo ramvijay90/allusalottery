@@ -1,3 +1,11 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Terms & Conditions | All USA Lottery',
+  description: 'Read the Terms and Conditions of using AllUSALottery.com lottery results, 2026 visual charts, and historical draw archives.',
+  alternates: { canonical: 'https://allusalottery.com/terms' },
+};
+
 export default function TermsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-20">
