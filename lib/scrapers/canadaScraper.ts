@@ -191,12 +191,17 @@ export async function scrapeCanadaLotteries(): Promise<CanadaScrapeResult> {
             }
         }
 
+        const { scrapeCanadaProvincialAddons } = await import('@/lib/scrapers/canadaProvincialScraper');
+        const addonRes = await scrapeCanadaProvincialAddons();
+        updatedCount += addonRes.updatedCount;
+        updatedGames.push(...addonRes.updatedGames);
+
         for (const prov of ['ac', 'bc', 'on', 'qc', 'wc']) {
             try { revalidatePath(`/results/${prov}`); } catch (_) {}
         }
         try { revalidatePath('/live-results'); } catch (_) {}
 
-        return { totalScraped: parsedItems.length, updatedCount, updatedGames };
+        return { totalScraped: parsedItems.length + addonRes.totalScraped, updatedCount, updatedGames };
     } catch (err: any) {
         console.error('Error scraping Canadian lotteries:', err.message);
         return { totalScraped: 0, updatedCount: 0, updatedGames: [], error: err.message };

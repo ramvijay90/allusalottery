@@ -56,7 +56,11 @@ export async function POST(req: NextRequest) {
                         'kicker',
                         'mass-cash-midday',
                         'play-5-night',
-                        'loter-a-tradicional'
+                        'loter-a-tradicional',
+                        'triplex',
+                        'sprinto',
+                        'lotto-d',
+                        'salsa-bingo'
                     ]
                 },
                 $or: [

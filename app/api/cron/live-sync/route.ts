@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
                 targetStates = STATE_BATCHES[batchIndex] || STATE_BATCHES[0];
             }
 
-            stateResults = await scrapeStatesConcurrently(targetStates, 4);
+            stateResults = await scrapeStatesConcurrently(targetStates, 6);
         }
 
         const totalStatesUpdated = stateResults.reduce((acc, r) => acc + (r.updatedCount || 0), 0);

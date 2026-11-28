@@ -25,6 +25,10 @@ const RETIRED_SLUGS = new Set([
     'mass-cash-midday',
     'play-5-night',
     'loter-a-tradicional',
+    'triplex',
+    'sprinto',
+    'lotto-d',
+    'salsa-bingo',
 ]);
 
 export type GoogleIndexStatus =
