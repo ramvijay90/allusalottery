@@ -164,6 +164,7 @@ export async function GET(req: NextRequest) {
         rows.push(
             { id: 'core-home', url: '/', pageType: 'Core', country: 'Global', googleStatus: 'INDEXABLE_SITEMAP', dbHealth: 'HEALTHY_2026', drawCount2026: games.length, repairable: false, reason: 'Homepage canonical & schema active' },
             { id: 'core-live', url: '/live-results', pageType: 'Core', country: 'Global', googleStatus: 'INDEXABLE_SITEMAP', dbHealth: 'HEALTHY_2026', drawCount2026: 40, repairable: false, reason: 'Live results hub active' },
+            { id: 'core-search', url: '/search', pageType: 'Core', country: 'Global', googleStatus: 'INDEXABLE_SITEMAP', dbHealth: 'HEALTHY_2026', drawCount2026: games.length, repairable: false, reason: 'Unified scheme search & number checker active' },
             { id: 'core-gen', url: '/lucky-number-generator', pageType: 'Generator', country: 'Global', googleStatus: 'INDEXABLE_SITEMAP', dbHealth: 'HEALTHY_2026', drawCount2026: CATEGORIES.length, repairable: false, reason: 'Generator directory indexed' },
             { id: 'sys-admin', url: '/admin', pageType: 'Admin/Noindex', country: 'System', googleStatus: 'NOINDEX_ADMIN_SYSTEM', dbHealth: 'HEALTHY_2026', drawCount2026: 0, repairable: false, reason: 'Disallowed in robots.txt + meta noindex' },
             { id: 'sys-audit', url: '/admin/audit', pageType: 'Admin/Noindex', country: 'System', googleStatus: 'NOINDEX_ADMIN_SYSTEM', dbHealth: 'HEALTHY_2026', drawCount2026: 0, repairable: false, reason: 'Audit console protected (noindex, nofollow)' },

@@ -3,6 +3,8 @@ import { ArrowRight, MapPin, Trophy, Zap } from 'lucide-react';
 import connectToDatabase from '@/lib/db';
 import State from '@/models/State';
 import Game from '@/models/Game';
+import { estimateCashOptionLabel } from '@/lib/gamePayoutsAndSchedule';
+import SchemeSearchBar from '@/components/SchemeSearchBar';
 import HomeSeoContent from '@/components/HomeSeoContent';
 import BeforeContentAd from '@/components/ads/BeforeContentAd';
 import SidebarAd from '@/components/ads/SidebarAd';
@@ -161,6 +163,7 @@ async function getTopJackpots() {
         slug: powerball?.slug || 'powerball', 
         state: powerball?.stateSlug || 'az', 
         ...formatJackpot(powerball, '$450'),
+        cashLabel: estimateCashOptionLabel(powerball?.jackpot) || 'Official Multi-State Jackpot',
         lastDraw: formatDate(powerball?.lastDrawDate)
       },
       { 
@@ -168,6 +171,7 @@ async function getTopJackpots() {
         slug: mega?.slug || 'megamillions', 
         state: mega?.stateSlug || 'ca', 
         ...formatJackpot(mega, '$325'),
+        cashLabel: estimateCashOptionLabel(mega?.jackpot) || 'Official Multi-State Jackpot',
         lastDraw: formatDate(mega?.lastDrawDate)
       },
       { 
@@ -175,15 +179,16 @@ async function getTopJackpots() {
         slug: lottomax?.slug || 'lottomax', 
         state: lottomax?.stateSlug || 'ac', 
         ...formatJackpot(lottomax, '$70'),
+        cashLabel: 'Tax-Free Canadian National Jackpot',
         lastDraw: formatDate(lottomax?.lastDrawDate)
       },
     ];
   } catch (error) {
     console.error("Failed to fetch jackpots", error);
     return [
-      { name: 'Powerball', slug: 'powerball', state: 'az', price: '$450', highlight: 'Million', lastDraw: 'March 18, 2024' },
-      { name: 'Mega Millions', slug: 'megamillions', state: 'ca', price: '$325', highlight: 'Million', lastDraw: 'March 18, 2024' },
-      { name: 'Lotto Max', slug: 'lottomax', state: 'ac', price: '$70', highlight: 'Million', lastDraw: 'March 18, 2024' },
+      { name: 'Powerball', slug: 'powerball', state: 'az', price: '$450', highlight: 'Million', cashLabel: 'Official Multi-State Jackpot', lastDraw: 'March 18, 2024' },
+      { name: 'Mega Millions', slug: 'megamillions', state: 'ca', price: '$325', highlight: 'Million', cashLabel: 'Official Multi-State Jackpot', lastDraw: 'March 18, 2024' },
+      { name: 'Lotto Max', slug: 'lottomax', state: 'ac', price: '$70', highlight: 'Million', cashLabel: 'Tax-Free Canadian National Jackpot', lastDraw: 'March 18, 2024' },
     ];
   }
 }
@@ -243,7 +248,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     'url': 'https://allusalottery.com',
     'potentialAction': {
       '@type': 'SearchAction',
-      'target': 'https://allusalottery.com/results/{search_term_string}',
+      'target': 'https://allusalottery.com/search?q={search_term_string}',
       'query-input': 'required name=search_term_string'
     }
   };
@@ -253,7 +258,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     '@type': 'Organization',
     'name': 'All USA Lottery',
     'url': 'https://allusalottery.com',
-    'logo': 'https://allusalottery.com/opengraph-image'
+    'logo': 'https://allusalottery.com/apple-icon.png'
   };
 
   const faqSchema = {
@@ -310,14 +315,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       {/* Hero Section */}
-      <section className="relative bg-[#0f172a] py-20 md:py-32 overflow-hidden pb-32">
+      <section className="relative bg-[#0f172a] py-20 md:py-28 pb-32">
         {/* Background Effects */}
-        <div className="absolute top-0 left-0 w-full h-full">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/20 rounded-full blur-[120px]"></div>
           <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-600/10 rounded-full blur-[100px]"></div>
         </div>
 
-        <div className="container mx-auto px-4 relative z-10 text-center">
+        <div className="container mx-auto px-4 relative z-20 text-center">
           <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-full mb-6 backdrop-blur-sm">
             <Zap size={14} className="text-[#f59e0b]" />
             <span className="text-xs font-bold text-white uppercase tracking-widest">Live Results & Updates</span>
@@ -326,9 +331,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             USA Lottery Results Today & <br />
             <span className="text-[#f59e0b]">Live Winning Numbers</span>
           </h1>
-          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 font-medium">
-            Verified live lottery results, 2026 visual charts &amp; overdue number analysis for USA, Canada, UK, Europe, Australia, New Zealand &amp; Africa.
+          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-8 font-medium">
+            Verified live lottery results, prize payouts, 2026 visual charts &amp; scheme search across USA, Canada, UK, Europe, Australia, New Zealand &amp; Africa.
           </p>
+
+          {/* Unified Scheme Search & Double Play Variant Lookup */}
+          <div className="mb-8">
+            <SchemeSearchBar />
+          </div>
+
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="#states" className="bg-[#f59e0b] hover:bg-amber-500 text-[#0f172a] px-8 py-4 rounded-xl font-black transition-all shadow-xl shadow-amber-900/40 active:scale-95 flex items-center gap-2">
               <MapPin size={20} /> BROWSE BY STATE
@@ -341,7 +352,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
       </section>
 
       {/* Featured Jackpots */}
-      <section id="jackpots" className="container mx-auto px-4 -mt-12 relative z-20 mb-20">
+      <section id="jackpots" className="container mx-auto px-4 -mt-12 relative z-10 mb-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {jackpotGames.map((game, i) => (
               <div key={game.name} className={`premium-card p-8 ${i === 0 ? 'bg-[#0f172a] border-white/10' : 'bg-white'}`}>
@@ -354,7 +365,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                 <div className={`text-4xl font-black tracking-tighter mb-2 ${i === 0 ? 'text-white' : 'text-slate-900'}`}>
                   {game.price} {game.highlight && <span className="text-[#f59e0b]">{game.highlight}</span>}
                 </div>
-                <div className={`text-sm font-medium mb-8 ${i === 0 ? 'text-slate-400' : 'text-slate-500'}`}>Estimated Cash: $213.4M</div>
+                <div className={`text-sm font-medium mb-8 ${i === 0 ? 'text-slate-400' : 'text-slate-500'}`}>{game.cashLabel}</div>
 
                 <div className={`pt-6 border-t ${i === 0 ? 'border-white/5' : 'border-slate-100'} flex justify-between items-center`}>
                   <div className="flex flex-col">

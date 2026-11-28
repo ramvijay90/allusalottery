@@ -130,6 +130,10 @@ export default function RootLayout({
                 LUCKY NUMBER
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
               </Link>
+              <Link href="/search" className="hover:text-[#0f172a] transition-colors relative group">
+                SEARCH
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
+              </Link>
               <Link href="/about" className="hover:text-[#0f172a] transition-colors relative group">
                 ABOUT
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#f59e0b] transition-all group-hover:w-full"></span>
@@ -173,6 +177,7 @@ export default function RootLayout({
                   <li><Link href="/?country=New Zealand#states" className="hover:text-white transition-colors">New Zealand Results</Link></li>
                   <li><Link href="/?country=Africa#states" className="hover:text-white transition-colors">Africa (SA &amp; Nigeria)</Link></li>
                   <li><Link href="/live-results" className="hover:text-white transition-colors">Live Results Feed</Link></li>
+                  <li><Link href="/search" className="hover:text-white transition-colors">Search Schemes &amp; Numbers</Link></li>
                   <li><Link href="/lucky-number-generator" className="hover:text-white transition-colors">Lucky Number Generator</Link></li>
                   <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
                   <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>

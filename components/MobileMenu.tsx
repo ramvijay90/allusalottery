@@ -61,6 +61,9 @@ export default function MobileMenu() {
             <Link href="/lucky-number-generator" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
               Lucky Number
             </Link>
+            <Link href="/search" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
+              Search Schemes
+            </Link>
             <Link href="/about" onClick={closeMenu} className="hover:text-[#f59e0b] transition-colors border-b border-slate-100 pb-4">
               About
             </Link>

@@ -30,6 +30,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'weekly',
       priority: 0.85,
     },
+    {
+      url: `${baseUrl}/search`,
+      lastModified: defaultLastModified,
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
     ...CATEGORIES.map((cat) => ({
       url: `${baseUrl}/lucky-number-generator/${cat.id}`,
       lastModified: defaultLastModified,

@@ -179,7 +179,11 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
         .map((g: any) => `${g.name} (${formatDrawSummaryLine({ date: g.lastDrawDate, numbers: g.numbers, powerBall: g.powerBall }) || g.numbers.join('-')})`)
         .join(' • ');
 
-    const title = `${stateName} Lottery Winning Numbers & Results (${currentYear}) | ${bundle.operatorShort}`;
+    const showOperatorSuffix =
+        bundle.operatorShort.toLowerCase().trim() !== `${stateName.toLowerCase()} lottery`;
+    const title = showOperatorSuffix
+        ? `${stateName} Lottery Winning Numbers & Results (${currentYear}) | ${bundle.operatorShort}`
+        : `${stateName} Lottery Winning Numbers & Results (${currentYear})`;
     const description = `${stateName} lottery results & past winning numbers (${bundle.operatorName}). ${topSnippets ? `Latest: ${topSnippets}. ` : ''}Check ${currentYear} charts & jackpots.`;
     const canonicalUrl = `https://allusalottery.com/results/${resolved}`;
     const ogImageUrl = `https://allusalottery.com/results/${resolved}/opengraph-image`;

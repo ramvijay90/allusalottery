@@ -13,6 +13,7 @@ import AfterContentAd from '@/components/ads/AfterContentAd';
 import { getStateLotteryDetails } from '@/lib/stateLotteryInfo';
 import { getGameData, resolveAliases, cleanJackpot } from '@/lib/getGameData';
 import { buildGameKeywords, formatDrawSummaryLine, getCountryKeywordBundle } from '@/lib/seoKeywords';
+import { estimateCashOptionLabel, getGamePayoutAndSchedule } from '@/lib/gamePayoutsAndSchedule';
 
 // Cache responses for 5 minutes (ISR) to keep server process count near 0
 export const revalidate = 300;
@@ -100,7 +101,9 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
         : hasNumbers
             ? `${data.game.numbers.slice(0, 7).join('-')}${data.game.powerBall ? ` (${data.game.powerBall})` : ''}. `
             : '';
-    const description = `${data.state.name} ${data.game.name} winning numbers & past results (${bundle.operatorShort}): ${latestNumsSnippet}${currentYear} charts, overdue numbers, claim (${stateDetails.claimPeriod}) & tax (${stateDetails.stateTaxRate}).`;
+    const payoutInfo = getGamePayoutAndSchedule(resolvedGame, data.game.name, resolvedState, data.state.country);
+    const cashOpt = payoutInfo.supportsCashOption ? estimateCashOptionLabel(cleanJp) : null;
+    const description = `${data.state.name} ${data.game.name} winning numbers, prize payouts & odds (${bundle.operatorShort}): ${latestNumsSnippet}${cashOpt ? `${cashOpt}. ` : ''}${currentYear} charts, draw times (${payoutInfo.drawDaysTime}), claim (${stateDetails.claimPeriod}) & tax (${stateDetails.stateTaxRate}).`;
     const canonicalUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}`;
     const ogImageUrl = `https://allusalottery.com/results/${resolvedState}/${resolvedGame}/opengraph-image`;
 
@@ -113,14 +116,17 @@ export async function generateMetadata({ params }: { params: Promise<{ stateSlug
         robots: hasNumbers
             ? { index: true, follow: true }
             : { index: false, follow: true },
-        keywords: buildGameKeywords({
-            stateName: data.state.name,
-            stateSlug: resolvedState,
-            country: data.state.country,
-            gameName: data.game.name,
-            gameSlug: resolvedGame,
-            year: currentYear,
-        }),
+        keywords: [
+            ...buildGameKeywords({
+                stateName: data.state.name,
+                stateSlug: resolvedState,
+                country: data.state.country,
+                gameName: data.game.name,
+                gameSlug: resolvedGame,
+                year: currentYear,
+            }),
+            ...payoutInfo.seoKeywordBoosters,
+        ],
         openGraph: {
             title,
             description,
@@ -163,6 +169,9 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
     const { state, game, history, siblingGames } = data;
     const stateDetails = getStateLotteryDetails(state.slug);
     const countrySeo = getCountrySeoContext(state.country, state.slug);
+    const payoutInfo = getGamePayoutAndSchedule(game.slug, game.name, state.slug, state.country);
+    const cashOptionEstimate = payoutInfo.supportsCashOption ? estimateCashOptionLabel(cleanJackpot(game.jackpot)) : null;
+    const siblingSlugSet = new Set((siblingGames || []).map((sg: any) => String(sg.slug || '').toLowerCase()));
     const hasDrawDate = Boolean(game.lastDrawDate);
     const formattedLastDraw = hasDrawDate
         ? new Date(game.lastDrawDate).toLocaleDateString('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
@@ -467,8 +476,94 @@ export default async function GamePage({ params }: { params: Promise<{ stateSlug
                     showArchiveLink={true}
                 />
 
-                {/* SEO Text, State Rules, Cross-Links & Frequently Asked Questions */}
+                {/* SEO Text, Prize Payouts/Odds, State Rules, Cross-Links & Frequently Asked Questions */}
                 <div className="mt-12 space-y-8">
+                    {/* Prize Payout Tiers, Odds, Draw Schedule & Companion Schemes (USA Today & Lottery Post Style) */}
+                    <section aria-label={`${game.name} Prize Payouts and Odds`} className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+                        <div className="flex flex-wrap items-start justify-between gap-4 pb-4 border-b border-slate-100">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-black">
+                                    <Award size={20} />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl md:text-2xl font-black text-[#0f172a] tracking-tight">
+                                        {game.name} Prize Payouts, Odds &amp; Draw Schedule
+                                    </h2>
+                                    <p className="text-xs text-slate-500 font-medium">
+                                        Official tier breakdown, multiplier rules &amp; next draw times for {state.name}
+                                    </p>
+                                </div>
+                            </div>
+                            {payoutInfo.overallOdds && (
+                                <span className="px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black uppercase tracking-wider">
+                                    Overall Odds: {payoutInfo.overallOdds}
+                                </span>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4">
+                                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1">
+                                    Drawing Schedule &amp; Cash Option
+                                </div>
+                                <div className="text-sm font-bold text-slate-900">{payoutInfo.drawDaysTime}</div>
+                                {cashOptionEstimate && (
+                                    <div className="text-xs font-extrabold text-amber-700 mt-1">{cashOptionEstimate}</div>
+                                )}
+                                <p className="text-[11px] text-slate-500 mt-1">{payoutInfo.cutoffNote}</p>
+                            </div>
+                            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4">
+                                <div className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1">
+                                    Multiplier &amp; Companion Draw Rules
+                                </div>
+                                <div className="text-sm font-bold text-slate-800">{payoutInfo.multiplierNote}</div>
+                                {payoutInfo.relatedVariants.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-2.5">
+                                        {payoutInfo.relatedVariants.map((rv) => {
+                                            const targetHref = siblingSlugSet.has(rv.slug.toLowerCase())
+                                                ? `/results/${state.slug}/${rv.slug}`
+                                                : `/search?q=${encodeURIComponent(rv.label)}`;
+                                            return (
+                                                <Link
+                                                    key={rv.slug}
+                                                    href={targetHref}
+                                                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-black transition-colors"
+                                                >
+                                                    <span>{rv.label}</span>
+                                                    <span className="opacity-70">({rv.badge}) &rarr;</span>
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                                <thead className="bg-[#0f172a] text-white">
+                                    <tr>
+                                        <th className="py-3 px-4 font-black uppercase tracking-wider">Match</th>
+                                        <th className="py-3 px-4 font-black uppercase tracking-wider">Prize / Payout</th>
+                                        <th className="py-3 px-4 font-black uppercase tracking-wider text-right">Winning Odds</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {payoutInfo.tiers.map((tier, idx) => (
+                                        <tr key={idx} className={idx % 2 === 1 ? 'bg-slate-50/70' : 'bg-white'}>
+                                            <td className="py-2.5 px-4 font-bold text-slate-900">{tier.match}</td>
+                                            <td className="py-2.5 px-4 font-black text-emerald-700">
+                                                {tier.prize}
+                                                {tier.multiplierEligible ? ' *' : ''}
+                                            </td>
+                                            <td className="py-2.5 px-4 font-medium text-slate-600 text-right">{tier.odds}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+
                     {/* State-Specific Claim & Tax Rules Guide (High E-E-A-T Unique Content) */}
                     <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
                         <div className="flex items-center gap-3 pb-4 mb-6 border-b border-slate-100">
